@@ -105,7 +105,11 @@ public:
   }
 
   static const int nSamples = n;
+
 protected:
   double c[n];
 };
+
+typedef BaseSpectrum<10> spectrum;
+
 #endif // spectrum_hpp
