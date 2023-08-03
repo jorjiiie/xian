@@ -1,6 +1,0 @@
-/Users/ryanzhu/xian/build/CMakeFiles/test.dir
-/Users/ryanzhu/xian/build/CMakeFiles/edit_cache.dir
-/Users/ryanzhu/xian/build/CMakeFiles/rebuild_cache.dir
-/Users/ryanzhu/xian/build/src/miao/CMakeFiles/miao.dir
-/Users/ryanzhu/xian/build/src/miao/CMakeFiles/edit_cache.dir
-/Users/ryanzhu/xian/build/src/miao/CMakeFiles/rebuild_cache.dir

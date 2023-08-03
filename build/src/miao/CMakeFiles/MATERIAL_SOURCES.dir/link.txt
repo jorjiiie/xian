@@ -1,2 +1,0 @@
-/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ar qc libMATERIAL_SOURCES.a CMakeFiles/MATERIAL_SOURCES.dir/core/Matrix4.cpp.o CMakeFiles/MATERIAL_SOURCES.dir/core/material.cpp.o
-/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ranlib libMATERIAL_SOURCES.a
