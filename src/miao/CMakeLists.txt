@@ -1,6 +1,8 @@
 set(CORE_SOURCES
   core/Matrix4.cpp
-  core/material.cpp)
+  core/material.cpp
+  core/BBox.cpp
+  core/shape.cpp)
 
 set(CAMERA_SOURCES)
 set(INTEGRATOR_SOURCES)

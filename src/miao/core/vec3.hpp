@@ -81,6 +81,11 @@ struct vec3 {
     }
     return 0;
   }
+  bool operator==(const vec3 &b) const {
+    return (std::abs(x - b.x) < EPS && std::abs(y - b.y) < EPS &&
+            std::abs(z - b.z) < EPS);
+  }
+  bool operator!=(const vec3 &b) const { return !((*this) == b); }
 
   // misc operators
   static double dot(const vec3 &a, const vec3 &b) {
