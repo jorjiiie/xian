@@ -76,45 +76,11 @@ struct Matrix4 {
     return t;
   }
 
-  Matrix4 &invert() {
-    double t[4][4] = {};
-    for (int i = 0; i < 4; i++)
-      t[i][i] = 1;
-    for (int i = 0; i < 4; i++) {
-      // find a pivot
-      int pivot = i;
-      while (pivot < 4 && m[pivot][i] < EPS)
-        pivot++;
-      if (pivot == 4)
-        throw "Matrix4::invert(): matrix is singular";
-      // swap rows
-      double p = m[pivot][i];
-      for (int j = 0; j < 4; j++) {
-        std::swap(m[i][j], m[pivot][j]);
-        m[i][j] /= p;
-        std::swap(t[i][j], t[pivot][j]);
-      }
-      // subtract rows
-      for (int j = i + 1; j < 4; j++) {
-        if (i == j)
-          continue;
-        double p = m[j][i];
-        for (int k = 0; k < 4; k++) {
-          m[j][k] -= p * m[i][k];
-          t[j][k] -= p * t[i][k];
-        }
-      }
-    }
-    std::swap(m, t);
-    return *this;
-  }
+  Matrix4 &invert();
   Matrix4 transpose() const {
-    return Matrix4 {
-      m[0][0], m[1][0], m[2][0], m[3][0], 
-      m[0][1], m[1][1], m[2][1], m[3][1],
-      m[0][2], m[1][2], m[2][2], m[3][2],
-      m[0][3], m[1][3], m[2][3], m[3][3]
-    };
+    return Matrix4{m[0][0], m[1][0], m[2][0], m[3][0], m[0][1], m[1][1],
+                   m[2][1], m[3][1], m[0][2], m[1][2], m[2][2], m[3][2],
+                   m[0][3], m[1][3], m[2][3], m[3][3]};
   }
 
   Matrix4 inverse() const {
