@@ -4,6 +4,7 @@
 
 #include "vec3.hpp"
 
+namespace miao {
 class medium;
 
 struct ray {
@@ -18,4 +19,5 @@ struct ray {
   const medium *m;
 };
 
+} // namespace miao
 #endif

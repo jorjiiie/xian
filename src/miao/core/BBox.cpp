@@ -1,5 +1,6 @@
 #include "BBox.hpp"
 
+namespace miao {
 bool BBox::intersect(const ray &r, double &t0, double &t1) const {
   double h0 = 0, h1 = r.maxt;
   for (int i = 0; i < 3; i++) {
@@ -18,3 +19,4 @@ bool BBox::intersect(const ray &r, double &t0, double &t1) const {
   t1 = h1;
   return true;
 }
+} // namespace miao

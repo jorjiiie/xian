@@ -2,12 +2,13 @@
 #ifndef TRANSFORM_HPP
 #define TRANSFORM_HPP
 
+#include "BBox.hpp"
 #include "Matrix4.hpp"
+#include "ray.hpp"
 #include "utils.hpp"
 #include "vec3.hpp"
-#include "ray.hpp"
-#include "BBox.hpp"
 
+namespace miao {
 class Transformation {
 public:
   Transformation() {}
@@ -108,8 +109,9 @@ public:
   // remember that the normal is transformed by the inverse transpose! i'm not
   // implementing that though since i don't have normals lol
 
-  ray operator()(const ray& r) const {
-    return ray{(*this)(r.o, true), (*this)(r.d), r.mint, r.maxt, r.time, r.depth, r.m};
+  ray operator()(const ray &r) const {
+    return ray{
+        (*this)(r.o, true), (*this)(r.d), r.mint, r.maxt, r.time, r.depth, r.m};
   }
 
   BBox operator()(const BBox &b) const {
@@ -120,11 +122,13 @@ public:
     return ret;
   }
 
-  Transformation operator*(const Transformation& o) const {
+  Transformation operator*(const Transformation &o) const {
     return Transformation(m * o.m, o.m_inv * m_inv);
   }
+
 private:
   Matrix4 m, m_inv;
 };
 
+} // namespace miao
 #endif // transform_hpp

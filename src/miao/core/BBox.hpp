@@ -5,6 +5,7 @@
 #include "ray.hpp"
 #include "vec3.hpp"
 
+namespace miao {
 struct BBox {
   BBox()
       : mn(vec3{-D_INFINITY, -D_INFINITY, -D_INFINITY}),
@@ -90,5 +91,6 @@ struct BBox {
 
   point3 mn, mx;
 };
+} // namespace miao
 
 #endif

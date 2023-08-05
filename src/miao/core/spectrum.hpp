@@ -6,6 +6,7 @@
 
 #include "utils.hpp"
 
+namespace miao {
 template <int n> class BaseSpectrum {
 public:
   BaseSpectrum(double v = 0.0) {
@@ -112,4 +113,5 @@ protected:
 
 typedef BaseSpectrum<10> spectrum;
 
+} // namespace miao
 #endif // spectrum_hpp

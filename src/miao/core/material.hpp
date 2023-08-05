@@ -1,4 +1,5 @@
 #pragma once
+#include "interaction.hpp"
 #ifndef MATERIAL_HPP
 #define MATERIAL_HPP
 
@@ -8,6 +9,9 @@
 #include "spectrum.hpp"
 #include "vec3.hpp"
 
+#include <optional>
+
+namespace miao {
 namespace BXDF {
 // fresnel reflectance
 double FrDielectric(double costi, double etaI, double etaT);
@@ -138,4 +142,69 @@ private:
   const frdielec fr;
 };
 
+class lambertian : public bxdf {
+public:
+  lambertian(const spectrum &s)
+      : bxdf(BxDFType(BSDF_REFLECTION | BSDF_DIFFUSE)), s(s) {}
+
+  virtual spectrum f(const vec3 &wi, const vec3 &wo) const override;
+  virtual spectrum sample_f(const vec3 &wo, vec3 &wi, RNG &rng, double &pdf,
+                            BxDFType *type = nullptr) const override;
+  virtual double pdf(const vec3 &wi, const vec3 &wo) const override;
+
+  virtual spectrum rho(const vec3 &wo, int nsamps, RNG &r) const override;
+
+private:
+  spectrum s;
+};
+
+class bsdf {
+public:
+  static constexpr int maxbxdfs = 8;
+  bsdf(const SurfaceInteraction &si, double eta = 1)
+      : eta(eta), si(si), x(si.dpdu.unit()), y(vec3::cross(si.n, x)) {}
+  void add(bxdf *b) {
+    // ASSERT(nbxdfs < maxbxdfs, "too many bxdfs uh oh");
+    bxdfs[nbxdfs++] = b;
+  }
+
+  // orthonormal transformation
+  int num_components(BxDFType flags = BSDF_ALL) const;
+  vec3 wtl(const vec3 &v) const {
+    return vec3{vec3::dot(v, x), vec3::dot(v, y), vec3::dot(v, si.n)};
+  }
+
+  // transposed transformation (unitary! so it's actually the inverse)
+  vec3 ltw(const vec3 &v) const {
+    return vec3{v.x * x.x + v.y * y.x + v.z * si.n.x,
+                v.x * x.y + v.y * y.y + v.z * si.n.y,
+                v.x * x.z + v.y * y.z + v.z * si.n.z};
+  }
+  spectrum f(const vec3 &wo_world, const vec3 &wi_world,
+             BxDFType flags = BSDF_ALL) const;
+  spectrum rho(int nsamples, RNG &rng, BxDFType flags = BSDF_ALL) const;
+  spectrum rho(const vec3 &wo, int nsamples, RNG &rng,
+               BxDFType flags = BSDF_ALL) const;
+  spectrum sample_f(const vec3 &wo, vec3 &wi, RNG &rng, double &pdf,
+                    BxDFType type = BSDF_ALL,
+                    BxDFType *sampled = nullptr) const;
+  double pdf(const vec3 &wo, const vec3 &wi, BxDFType flags = BSDF_ALL) const;
+
+private:
+  vec3 x, y;
+  const SurfaceInteraction &si;
+  double eta;
+  int nbxdfs = 0;
+  bxdf *bxdfs[maxbxdfs];
+};
+
+class material {
+public:
+  virtual void sf(SurfaceInteraction &si, int mode, bool multi_lobe) const = 0;
+  virtual ~material();
+};
+
+class matte : public material {};
+
+} // namespace miao
 #endif

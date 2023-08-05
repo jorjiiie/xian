@@ -1,4 +1,7 @@
 #include "material.hpp"
+#include "interaction.hpp"
+
+namespace miao {
 
 namespace BXDF {
 // fresnel reflectance
@@ -58,3 +61,31 @@ spectrum FrConductor(double cosThetaI, const spectrum &etai,
   return (Rp + Rs) * 0.5;
 }
 } // namespace BXDF
+
+spectrum lambertian::f(const vec3 &wi, const vec3 &wo) const {
+  return s * INV_PI;
+}
+double lambertian::pdf(const vec3 &wi, const vec3 &wo) const {
+  return vec3::dot(wi, wo);
+}
+spectrum lambertian::rho(const vec3 &wo, int nsamps, RNG &r) const { return s; }
+
+spectrum bsdf::f(const vec3 &wo_world, const vec3 &wi_world,
+                 BxDFType flags) const {
+  spectrum out{};
+  vec3 wo = wtl(wo_world);
+  vec3 wi = wtl(wi_world);
+  // can't we just dot the wi wo together? lol
+  bool reflect = vec3::dot(wo_world, si.n) * vec3::dot(wi_world, si.n) > 0;
+
+  for (int i = 0; i < nbxdfs; i++) {
+    if (bxdfs[i]->match(flags) &&
+        ((reflect && (bxdfs[i]->type & BSDF_REFLECTION)) ||
+         (!reflect && (bxdfs[i]->type & BSDF_TRANSMISSION)))) {
+      out += bxdfs[i]->f(wo, wi);
+    }
+  }
+  return out;
+}
+
+} // namespace miao

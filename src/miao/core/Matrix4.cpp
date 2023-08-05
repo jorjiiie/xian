@@ -1,5 +1,7 @@
 #include "Matrix4.hpp"
 
+namespace miao {
+
 Matrix4 &Matrix4::invert() {
   double t[4][4] = {};
   for (int i = 0; i < 4; i++)
@@ -32,3 +34,4 @@ Matrix4 &Matrix4::invert() {
   std::swap(m, t);
   return *this;
 }
+} // namespace miao

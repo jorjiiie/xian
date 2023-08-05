@@ -5,9 +5,10 @@
 #include <cstdint>
 #include <iostream>
 
-#define PCG32_DEFAULT_STATE 0x853c49e6748fea9bULL
-#define PCG32_DEFAULT_STREAM 0xda3e39cb94b95bdbULL
-#define PCG32_MULT 0x5851f42d4c957f2dULL
+namespace miao {
+const int64_t PCG32_DEFAULT_STATE = 0x853c49e6748fea9bULL;
+const int64_t PCG32_DEFAULT_STREAM = 0xda3e39cb94b95bdbULL;
+const int64_t PCG32_MULT = 0x5851f42d4c957f2dULL;
 
 // probably bad performance
 struct RNG {
@@ -116,5 +117,6 @@ private:
   uint64_t inc;   // Controls which RNG sequence (stream) is selected. Must
                   // *always* be odd.
 };
+} // namespace miao
 
 #endif // rng_hpp
