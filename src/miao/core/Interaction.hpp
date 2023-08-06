@@ -1,9 +1,9 @@
 #pragma once
-#include "utils.hpp"
 #ifndef INTERACTION_HPP
 #define INTERACTION_HPP
 
 #include "ray.hpp"
+#include "utils.hpp"
 #include "vec3.hpp"
 
 namespace miao {
@@ -49,9 +49,9 @@ struct SurfaceInteraction : public interaction {
       : interaction(p, n, wo, t, m), s(s), uv(uv) {}
   point3 uv;
   const shape *s = nullptr;
-  const primitive *p = nullptr;
+  const primitive *pr = nullptr;
   // probably want a unique ptr here lol
-  std::shared_ptr<bsdf> b;
+  bsdf *b = nullptr;
 };
 class MediumInteraction : public interaction {};
 } // namespace miao

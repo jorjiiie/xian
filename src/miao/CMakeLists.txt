@@ -3,10 +3,10 @@ set(CORE_SOURCES
   core/material.cpp
   core/BBox.cpp
   core/shape.cpp)
-include_directories()
 
 set(CAMERA_SOURCES)
-set(INTEGRATOR_SOURCES)
+set(INTEGRATOR_SOURCES
+  integrators/integrator.cpp)
 set(LIGHT_SOURCES)
 set(MATERIAL_SOURCES)
 set(RENDERER_SOURCES)

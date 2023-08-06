@@ -1,11 +1,10 @@
 #pragma once
-#include "interaction.hpp"
-#include <cwchar>
 #ifndef MATERIAL_HPP
 #define MATERIAL_HPP
 
 // materials, bxdfs, textures.
 
+#include "interaction.hpp"
 #include "rng.hpp"
 #include "spectrum.hpp"
 #include "vec3.hpp"
@@ -113,6 +112,8 @@ public:
   bsdf(const SurfaceInteraction &si, double e) : si(si), eta(e), n(si.n) {}
   void add(std::shared_ptr<bxdf> b) { bxdfs[nb++] = b; }
   spectrum f(const vec3 &wi, const vec3 &wo, bool refl) const;
+  spectrum sample_f(const vec3 &wo, vec3 &wi, const vec3 &n, RNG &rng,
+                    double &pdf) const;
 
 private:
   std::shared_ptr<bxdf> bxdfs[MAX];

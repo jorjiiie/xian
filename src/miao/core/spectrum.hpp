@@ -33,7 +33,7 @@ public:
     r += s;
     return r;
   }
-  BaseSpectrum operator-=(const BaseSpectrum &s) {
+  BaseSpectrum &operator-=(const BaseSpectrum &s) {
     for (int i = 0; i < n; i++)
       c[i] -= s.c[i];
     return *this;
@@ -43,7 +43,7 @@ public:
     r -= s;
     return r;
   }
-  BaseSpectrum operator*=(const BaseSpectrum &s) {
+  BaseSpectrum &operator*=(const BaseSpectrum &s) {
     for (int i = 0; i < n; i++)
       c[i] *= s.c[i];
     return *this;
@@ -53,7 +53,7 @@ public:
     r *= s;
     return r;
   }
-  BaseSpectrum operator/=(const BaseSpectrum &s) {
+  BaseSpectrum &operator/=(const BaseSpectrum &s) {
     for (int i = 0; i < n; i++)
       c[i] /= s.c[i];
     return *this;
@@ -98,12 +98,26 @@ public:
       r.c[i] = clamp(r.c[i], low, high);
     return r;
   }
+  bool isBlack() const {
+    for (int i = 0; i < n; i++) {
+      if (c[i] != 0.0)
+        return false;
+    }
+    return true;
+  }
+  double magnitude() const {
+    double r = 0;
+    for (int i = 0; i < n; i++)
+      r += c[i] * c[i];
+    return std::sqrt(r);
+  }
   bool hasNaNs() const {
     for (int i = 0; i < n; i++)
       if (std::isnan(c[i]))
         return true;
     return false;
   }
+  virtual void toRGB(double &r, double &g, double &b) const;
 
   static const int nSamples = n;
 
@@ -111,7 +125,24 @@ protected:
   double c[n];
 };
 
-typedef BaseSpectrum<10> spectrum;
+class RGBSpectrum : public BaseSpectrum<3> {
+public:
+  RGBSpectrum() {}
+  RGBSpectrum(double d) : BaseSpectrum<3>(d) {}
+  RGBSpectrum(double r, double g, double b) {
+    c[0] = r;
+    c[1] = g;
+    c[2] = b;
+  }
+  RGBSpectrum(const BaseSpectrum<3> &s) : BaseSpectrum<3>(s) {}
+  virtual void toRGB(double &r, double &g, double &b) const override {
+    r = c[0];
+    g = c[1];
+    b = c[2];
+  }
+};
+// typedef BaseSpectrum<10> spectrum;
+typedef RGBSpectrum spectrum;
 
 } // namespace miao
 #endif // spectrum_hpp

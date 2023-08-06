@@ -10,6 +10,7 @@
 
 namespace miao {
 
+class film;
 class scene;
 class camera;
 
@@ -20,9 +21,10 @@ public:
 };
 
 // abstract class for integrators that sample
+// i think we should take a film here basically.
 class SampleIntegrator : public integrator {
 public:
-  SampleIntegrator(std::shared_ptr<camera> cam) : cam(cam) {}
+  SampleIntegrator(std::shared_ptr<camera> cam, film &f) : cam(cam), f(f) {}
   virtual ~SampleIntegrator();
   virtual spectrum Li(const ray &r, const scene &s, RNG &rng,
                       int depth = 0) const = 0;
@@ -30,11 +32,14 @@ public:
 
 protected:
   std::shared_ptr<camera> cam;
+  film &f;
 };
 
 class PathIntegrator : public SampleIntegrator {
 public:
-  PathIntegrator(std::shared_ptr<camera> cam) : SampleIntegrator(cam) {}
+  const int m_depth = 10;
+  PathIntegrator(std::shared_ptr<camera> cam, film &f)
+      : SampleIntegrator(cam, f) {}
   virtual spectrum Li(const ray &r, const scene &s, RNG &rng,
                       int depth = 0) const override;
 };
