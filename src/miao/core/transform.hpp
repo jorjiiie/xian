@@ -110,8 +110,7 @@ public:
   // implementing that though since i don't have normals lol
 
   ray operator()(const ray &r) const {
-    return ray{
-        (*this)(r.o, true), (*this)(r.d), r.mint, r.maxt, r.time, r.depth, r.m};
+    return ray{(*this)(r.o, true), (*this)(r.d), r.mint, r.maxt, r.time, r.m};
   }
 
   BBox operator()(const BBox &b) const {

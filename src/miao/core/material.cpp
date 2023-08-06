@@ -60,32 +60,57 @@ spectrum FrConductor(double cosThetaI, const spectrum &etai,
 
   return (Rp + Rs) * 0.5;
 }
+// https://graphics.pixar.com/library/OrthonormalB/paper.pdf (but it's the
+// frisvad one)
+void onb(const vec3 &i, vec3 &j, vec3 &k) {
+  if (i.z < -0.9999) {
+    j = vec3{0, -1, 0};
+    k = vec3{-1, 0, 0};
+    return;
+  }
+  const double a = 1.0 / (1.0 + i.z);
+  const double b = -i.x * i.y * a;
+  j = vec3{1.0 - i.x * i.x * a, b, -i.x};
+  k = vec3{b, 1.0 - i.y * i.y * a, -i.y};
+}
+vec3 cosine_unit(RNG &rng) {
+  double t = rng.rfloat() * 2 * PI;
+  double v = std::sqrt(rng.rfloat());
+
+  double x = std::cos(t) * v;
+  double y = std::sin(t) * v;
+  double z = std::sqrt(max(0.0, 1.0 - x * x - y * y));
+
+  return vec3{x, y, z};
+}
 } // namespace BXDF
 
-spectrum lambertian::f(const vec3 &wi, const vec3 &wo) const {
-  return s * INV_PI;
+spectrum lambertbsdf::f(const vec3 &wi, const vec3 &wo, const vec3 &n) const {
+  return s;
 }
-double lambertian::pdf(const vec3 &wi, const vec3 &wo) const {
-  return vec3::dot(wi, wo);
+spectrum lambertbsdf::sample_f(const vec3 &wo, vec3 &wi, const vec3 &n,
+                               RNG &rng, double &pdf) const {
+
+  vec3 w = BXDF::cosine_unit(rng);
+  vec3 j, k;
+  const vec3 &i = n;
+  // i j k defines the transformation
+  BXDF::onb(i, j, k);
+  wi = vec3{
+      w.x * i.x + w.y * j.x + w.z * k.x,
+      w.x * i.y + w.y * j.y + w.z * k.y,
+      w.x * i.z + w.y * j.z + w.z * k.z,
+  };
+  pdf = this->pdf(wi, wo, n);
+  return f(wi, wo, n);
 }
-spectrum lambertian::rho(const vec3 &wo, int nsamps, RNG &r) const { return s; }
 
-spectrum bsdf::f(const vec3 &wo_world, const vec3 &wi_world,
-                 BxDFType flags) const {
-  spectrum out{};
-  vec3 wo = wtl(wo_world);
-  vec3 wi = wtl(wi_world);
-  // can't we just dot the wi wo together? lol
-  bool reflect = vec3::dot(wo_world, si.n) * vec3::dot(wi_world, si.n) > 0;
-
-  for (int i = 0; i < nbxdfs; i++) {
-    if (bxdfs[i]->match(flags) &&
-        ((reflect && (bxdfs[i]->type & BSDF_REFLECTION)) ||
-         (!reflect && (bxdfs[i]->type & BSDF_TRANSMISSION)))) {
-      out += bxdfs[i]->f(wo, wi);
-    }
+spectrum bsdf::f(const vec3 &wi, const vec3 &wo, bool refl) const {
+  spectrum f{};
+  for (auto &x : bxdfs) {
+    f += x->f(wi, wo, this->n);
   }
-  return out;
+  return f;
 }
 
 } // namespace miao

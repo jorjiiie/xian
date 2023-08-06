@@ -3,10 +3,10 @@
 #ifndef SHAPE_HPP
 #define SHAPE_HPP
 
-#include "Bbox.hpp"
-#include "RNG.hpp"
+#include "BBox.hpp"
 #include "interaction.hpp"
 #include "ray.hpp"
+#include "rng.hpp"
 #include "transform.hpp"
 #include "vec3.hpp"
 

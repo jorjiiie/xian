@@ -1,8 +1,10 @@
 #include "miao/core/transform.hpp"
 #include "miao/core/vec3.hpp"
+#include "miao/integrators/integrator.hpp"
 
 #include <iostream>
 using namespace std;
+using namespace miao;
 
 int main() {
   vec3 joe{1, 2, 3};

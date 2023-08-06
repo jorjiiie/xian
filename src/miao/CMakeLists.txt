@@ -3,6 +3,7 @@ set(CORE_SOURCES
   core/material.cpp
   core/BBox.cpp
   core/shape.cpp)
+include_directories()
 
 set(CAMERA_SOURCES)
 set(INTEGRATOR_SOURCES)

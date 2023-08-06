@@ -45,17 +45,13 @@ struct interaction {
 struct SurfaceInteraction : public interaction {
   SurfaceInteraction() {}
   SurfaceInteraction(const point3 &p, const vec3 &n, const vec3 &wo, double t,
-                     const MediumInterface *m, const shape *s, const point3 &uv,
-                     const vec3 &dpdu, const vec3 &dpdv)
-      : interaction(p, n, wo, t, m), s(s), uv(uv), dpdu(dpdu), dpdv(dpdv) {}
-  vec3 dpdu;
-  vec3 dpdv;
+                     const MediumInterface *m, const shape *s, const point3 &uv)
+      : interaction(p, n, wo, t, m), s(s), uv(uv) {}
   point3 uv;
   const shape *s = nullptr;
   const primitive *p = nullptr;
-
   // probably want a unique ptr here lol
-  bsdf *b = nullptr;
+  std::shared_ptr<bsdf> b;
 };
 class MediumInteraction : public interaction {};
 } // namespace miao
