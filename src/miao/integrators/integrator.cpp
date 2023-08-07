@@ -13,7 +13,7 @@
 
 #include <iomanip>
 #include <memory>
-// #include <omp.h>
+#include <omp.h>
 #include <vector>
 
 namespace miao {
@@ -30,6 +30,7 @@ void SampleIntegrator::render(const scene &s) {
   num_threads = std::max(1, omp_get_max_threads() - 1) + 1;
   omp_set_num_threads(num_threads);
 #endif
+  std::cerr << "USING " << num_threads << " THREADS\n";
   std::vector<pcg32> rngs(num_threads);
 
   auto trace = [&](int x, int y) {

@@ -23,11 +23,11 @@ void tmp(film::pix &p, int s) {
 }
 
 int main() {
-  Transformation i{};
+  Transformation id{};
   spectrum light{1, 1, 1};
   AreaLight alight{light};
   shared_ptr<bsdf> bs = std::make_shared<bsdf>();
-  GeoPrimitive jaja{make_shared<sphere>(&i, &i, false, 2, 0, 0, 0, 0, 0), bs,
+  GeoPrimitive jaja{make_shared<sphere>(&id, &id, false, 2, 0, 0, 0, 0, 0), bs,
                     make_shared<AreaLight>(light)};
 
   vector<GeoPrimitive> x;

@@ -73,6 +73,19 @@ void onb(const vec3 &i, vec3 &j, vec3 &k) {
   j = vec3{1.0 - i.x * i.x * a, b, -i.x};
   k = vec3{b, 1.0 - i.y * i.y * a, -i.y};
 }
+vec3 changebasis(
+    const vec3 &n,
+    const vec3 &w) { // changes w from w in n = (0,0,1) space to world space
+  vec3 j, k;
+  const vec3 &i = n;
+  onb(i, j, k);
+
+  return vec3{
+      w.x * i.x + w.y * j.x + w.z * k.x,
+      w.x * i.y + w.y * j.y + w.z * k.y,
+      w.x * i.z + w.y * j.z + w.z * k.z,
+  };
+}
 vec3 cosine_unit(RNG &rng) {
   double t = rng.rfloat() * 2 * PI;
   double v = std::sqrt(rng.rfloat());

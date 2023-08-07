@@ -23,7 +23,9 @@ spectrum FrConductor(double cosThetaI, const spectrum &etai,
                      const spectrum &etat, const spectrum &k);
 
 void onb(const vec3 &i, vec3 &j, vec3 &k);
-vec3 changebasis(const vec3 &n, const vec3 &v);
+
+// changes w from w in n = (0,0,1) space to world space
+vec3 changebasis(const vec3 &n, const vec3 &w);
 vec3 cosine_unit(RNG &rng);
 } // namespace BXDF
 

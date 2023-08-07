@@ -2,6 +2,7 @@
 #ifndef PRIMITIVE_HPP
 #define PRIMITIVE_HPP
 
+#include <memory>
 #include <optional>
 #include <vector>
 
