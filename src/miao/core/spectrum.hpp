@@ -117,7 +117,7 @@ public:
         return true;
     return false;
   }
-  virtual void toRGB(double &r, double &g, double &b) const;
+  virtual void toRGB(double &r, double &g, double &b) const { r = g = b = 0; };
 
   static const int nSamples = n;
 

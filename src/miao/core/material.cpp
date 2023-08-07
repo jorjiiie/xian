@@ -113,4 +113,9 @@ spectrum bsdf::f(const vec3 &wi, const vec3 &wo, bool refl) const {
   return f;
 }
 
+spectrum bsdf::sample_f(const vec3 &wo, vec3 &wi, const vec3 &n, RNG &rng,
+                        double &pdf) const {
+  return spectrum{};
+}
+
 } // namespace miao

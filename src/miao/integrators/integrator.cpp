@@ -1,5 +1,6 @@
 #include "integrator.hpp"
 
+#include "miao/cameras/camera.hpp"
 #include "miao/cameras/film.hpp"
 
 #include "miao/core/interaction.hpp"
@@ -11,18 +12,24 @@
 #include "miao/lights/light.hpp"
 
 #include <iomanip>
-#include <omp.h>
+#include <memory>
+// #include <omp.h>
 #include <vector>
 
 namespace miao {
 void SampleIntegrator::render(const scene &s) {
 
-  int block_size = 16;
-  int width;
-  int height;
-  int samples;
+  int tile_size = 16;
+  int width = cam->f.get_width();
+  int height = cam->f.get_height();
 
   int num_threads = 1;
+
+// if openmp enabled
+#ifdef _OPENMP
+  num_threads = std::max(1, omp_get_max_threads() - 1) + 1;
+  omp_set_num_threads(num_threads);
+#endif
   std::vector<pcg32> rngs(num_threads);
 
   auto trace = [&](int x, int y) {
@@ -30,30 +37,35 @@ void SampleIntegrator::render(const scene &s) {
     int sy = 16 * y;
     int ex = min(16 * (x + 1), width);
     int ey = min(16 * (y + 1), height);
-    RNG &rng = rngs[0];
+    int idx = 0;
+
+#ifdef _OPENMP
+    idx = omp_get_thread_num(); // DONUT SHARE RNGS D:
+#endif
+
+    RNG &rng = rngs[idx];
     for (int i = sx; i < ex; i++) {
       for (int j = sy; j < ey; j++) {
         spectrum L{};
 
         for (int k = 0; k < samples; k++) {
           ray r;
-
+          cam->gen_ray(i, j, rng, r);
           L += Li(r, s, rng, 10);
         }
         // do something with L (add to film or sumthin)
 
         L /= samples;
-        f.add_sample(i, j, L);
+        cam->f.add_sample(i, j, L, 1);
         // f->add(L) or something
       }
     }
   };
 
-  int nx;
-  int ny;
+  int nx = (width - 1) / tile_size + 1;
+  int ny = (height - 1) / tile_size + 1;
   int cnt = 0;
   std::cerr << std::fixed << std::setprecision(3);
-
 #pragma omp parallel for collapse(2)
   for (int i = 0; i < nx; i++) {
     for (int j = 0; j < ny; j++) {
@@ -63,6 +75,8 @@ void SampleIntegrator::render(const scene &s) {
                 << " tiles rendered (" << cnt * 100.0 / nx / ny << "%)    ";
     }
   }
+
+  std::cerr << "\n";
 }
 
 spectrum PathIntegrator::Li(const ray &ra, const scene &s, RNG &rng,

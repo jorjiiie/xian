@@ -9,7 +9,8 @@ namespace debugging {
 template <typename... Args>
 void print(const char *file, int line, Args... args) {
   return;
-  (std::clog << "[" << file << ":" << line << "] " << ... << args) << std::endl;
+  //(std::clog << "[" << file << ":" << line << "] " << ... << args) <<
+  //std::endl;
 }
 } // namespace debugging
 

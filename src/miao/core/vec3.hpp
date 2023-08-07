@@ -117,8 +117,8 @@ struct vec3 {
   double x, y, z;
 };
 
-vec3 operator*(double d, const vec3 &v) { return v * d; }
-vec3 &operator*=(double d, vec3 &v) { return v *= d; }
+inline vec3 operator*(double d, const vec3 &v) { return v * d; }
+inline vec3 &operator*=(double d, vec3 &v) { return v *= d; }
 
 typedef vec3 point3;
 } // namespace miao

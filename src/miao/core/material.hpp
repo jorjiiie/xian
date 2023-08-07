@@ -106,9 +106,12 @@ private:
 };
 
 // collection of bxdfs - will be held by the primitives
+// damn a bsdf is created at each intersection point!
 class bsdf {
 public:
   static constexpr int MAX = 8;
+
+  bsdf() {}
   bsdf(const SurfaceInteraction &si, double e) : si(si), eta(e), n(si.n) {}
   void add(std::shared_ptr<bxdf> b) { bxdfs[nb++] = b; }
   spectrum f(const vec3 &wi, const vec3 &wo, bool refl) const;

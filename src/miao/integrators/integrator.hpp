@@ -16,7 +16,6 @@ class camera;
 
 class integrator {
 public:
-  virtual ~integrator();
   virtual void render(const scene &) = 0;
 };
 
@@ -24,22 +23,22 @@ public:
 // i think we should take a film here basically.
 class SampleIntegrator : public integrator {
 public:
-  SampleIntegrator(std::shared_ptr<camera> cam, film &f) : cam(cam), f(f) {}
-  virtual ~SampleIntegrator();
+  SampleIntegrator(camera *cam, int samples = 32)
+      : cam(cam), samples(samples) {}
   virtual spectrum Li(const ray &r, const scene &s, RNG &rng,
                       int depth = 0) const = 0;
   void render(const scene &s) override;
 
 protected:
-  std::shared_ptr<camera> cam;
-  film &f;
+  camera *cam;
+  int samples;
 };
 
 class PathIntegrator : public SampleIntegrator {
 public:
   const int m_depth = 10;
-  PathIntegrator(std::shared_ptr<camera> cam, film &f)
-      : SampleIntegrator(cam, f) {}
+  PathIntegrator(camera *cam, int samples = 32)
+      : SampleIntegrator(cam, samples) {}
   virtual spectrum Li(const ray &r, const scene &s, RNG &rng,
                       int depth = 0) const override;
 };

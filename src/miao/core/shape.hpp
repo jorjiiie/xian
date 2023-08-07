@@ -41,7 +41,7 @@ public:
   virtual interaction sample(const interaction &i, RNG &r) const {
     return sample(r);
   }
-  virtual double pdf(const interaction &r, const vec3 &wi) const;
+  virtual double pdf(const interaction &r, const vec3 &wi) const = 0;
 
   const Transformation *otw, *wto;
   bool r;

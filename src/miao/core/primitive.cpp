@@ -9,12 +9,12 @@
 
 // animations should be pretty easy by throwing a layer on top of this.
 namespace miao {
-BBox GeoPrimitive::worldbound() const { return shape->worldBBox(); }
+BBox GeoPrimitive::worldbound() const { return s->worldBBox(); }
 std::optional<SurfaceInteraction> GeoPrimitive::intersect(const ray &r,
                                                           double &t) const {
   SurfaceInteraction isect;
 
-  if (!shape->intersect(r, t, isect))
+  if (!s->intersect(r, t, isect))
     return {};
   isect.pr = this;
 

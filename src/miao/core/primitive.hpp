@@ -16,7 +16,7 @@ class shape;
 
 class primitive {
 public:
-  virtual ~primitive();
+  // virtual ~primitive();
   virtual BBox worldbound() const = 0;
   virtual std::optional<SurfaceInteraction> intersect(const ray &r,
                                                       double &) const = 0;
