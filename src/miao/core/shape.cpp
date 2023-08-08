@@ -11,10 +11,12 @@ bool sphere::intersect(const ray &r, double &t,
   double phi, theta;
   point3 hit;
   ray ry = (*wto)(r);
+  double len = ry.d.magnitude();
+  ry.d = ry.d.unit();
 
   double a = vec3::dot(ry.d, ry.d);
   double b = 2 * vec3::dot(ry.o, ry.d);
-  double c = vec3::dot(ry.o, ry.o) - radius;
+  double c = vec3::dot(ry.o, ry.o) - radius * radius;
   double t0, t1;
   if (!quadratic(a, b, c, t0, t1))
     return false;
@@ -32,7 +34,7 @@ bool sphere::intersect(const ray &r, double &t,
   isect.wo = (*otw)(r.d);
   isect.n = (isect.p - (*otw)(vec3{0, 0, 0})).unit();
 
-  t = T;
+  t = T / len;
   return true;
 
   // for now we just don't care about the parametric stuff

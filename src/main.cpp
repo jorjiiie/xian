@@ -56,12 +56,12 @@ int main() {
   x.push_back(s4);
   dumb_aggregate world{x};
 
-  int width = 200;
-  int height = 200;
+  int width = 2000;
+  int height = 2000;
   film f{width, height};
   scene s{{}, std::make_shared<dumb_aggregate>(world)};
   TempCamera cam{f, {0, 0, -5}, {0, 1, 0}, {0, 0, 1}, 1, 0, 90};
-  ProgressiveRenderer renderer(s, cam, 10, 1000);
+  ProgressiveRenderer renderer(s, cam, 10, 100);
 
   auto callback = [&](int x) {
     freopen(("frank" + to_string(x) + ".ppm").c_str(), "w", stdout);

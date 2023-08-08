@@ -21,7 +21,7 @@
 namespace miao {
 void SampleIntegrator::render(const scene &s) {
 
-  int tile_size = 16;
+  int tile_size = 32;
   int width = cam->f.get_width();
   int height = cam->f.get_height();
 
@@ -40,10 +40,10 @@ void SampleIntegrator::render(const scene &s) {
   }
 
   auto trace = [&](int x, int y) {
-    int sx = 16 * x;
-    int sy = 16 * y;
-    int ex = min(16 * (x + 1), width);
-    int ey = min(16 * (y + 1), height);
+    int sx = tile_size * x;
+    int sy = tile_size * y;
+    int ex = min(tile_size * (x + 1), width);
+    int ey = min(tile_size * (y + 1), height);
     int idx = 0;
 
 #ifdef _OPENMP

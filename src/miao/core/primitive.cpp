@@ -35,17 +35,18 @@ BBox dumb_aggregate::worldbound() const { return wb; }
 std::optional<SurfaceInteraction> dumb_aggregate::intersect(const ray &r,
                                                             double &t) const {
   std::optional<SurfaceInteraction> ret = {};
-  double tt = 0;
+  double tt = 69123;
   for (const auto &x : p) {
     double tmp = 0;
-    auto y = x.intersect(r, tt);
+    auto y = x.intersect(r, tmp);
     if (y) {
       if (ret) {
         if (tt > tmp)
-          ret = std::move(*y);
+          ret = std::move(*y), tt = tmp;
 
       } else {
         ret = std::move(*y);
+        tt = tmp;
       }
     }
   }
