@@ -3,12 +3,12 @@
 #include "miao/integrators/integrator.hpp"
 
 namespace miao {
-void ProgressiveRenderer::render(const std::function<void()> &callback) {
+void ProgressiveRenderer::render(const std::function<void(int)> &callback) {
   // some preprocessing garbage
   for (int i = 0; i < epochs; i++) {
     std::cerr << "currently rendering epoch " << (i + 1) << "\n";
     leunuchs->render(s);
-    callback();
+    callback(i);
   }
 }
 } // namespace miao

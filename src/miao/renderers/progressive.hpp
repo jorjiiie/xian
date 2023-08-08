@@ -16,7 +16,7 @@ public:
   ProgressiveRenderer(scene &s, camera &cam, int epochs, int spe = 16)
       : s(s), cam(cam), leunuchs(std::make_shared<PathIntegrator>(&cam, spe)),
         epochs(epochs), spe(spe) {}
-  void render(const std::function<void()> &callback);
+  void render(const std::function<void(int)> &callback);
 
 private:
   scene &s;

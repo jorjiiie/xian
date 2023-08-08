@@ -2,11 +2,12 @@
 #ifndef TRANSFORM_HPP
 #define TRANSFORM_HPP
 
-#include "BBox.hpp"
-#include "Matrix4.hpp"
-#include "ray.hpp"
-#include "utils.hpp"
-#include "vec3.hpp"
+#include "miao/core/BBox.hpp"
+#include "miao/core/Matrix4.hpp"
+#include "miao/core/debug.hpp"
+#include "miao/core/ray.hpp"
+#include "miao/core/utils.hpp"
+#include "miao/core/vec3.hpp"
 
 namespace miao {
 class Transformation {

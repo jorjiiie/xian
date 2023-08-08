@@ -26,7 +26,7 @@ const AreaLight *aggregate::get_area_light() const {
   FAIL("AREA LIGHT CALLED ON AGGREGATE");
   return nullptr;
 }
-const bsdf *aggregate::get_material() const {
+const material *aggregate::get_material() const {
   FAIL("MATERIAL GOT ON AGGREGATE");
   return nullptr;
 }

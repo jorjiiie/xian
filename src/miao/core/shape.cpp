@@ -27,6 +27,10 @@ bool sphere::intersect(const ray &r, double &t,
     if (T > ry.maxt)
       return false;
   }
+  vec3 hp = r.o + T * r.d;
+  isect.p = (*otw)(hp);
+  isect.wo = (*otw)(r.d);
+  isect.n = (isect.p - (*otw)(vec3{0, 0, 0})).unit();
 
   t = T;
   return true;

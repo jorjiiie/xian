@@ -84,7 +84,7 @@ private:
 
 class lambertbsdf : public bxdf {
 public:
-  lambertbsdf(const spectrum &s) : s(s) {}
+  lambertbsdf(const spectrum &s_) : s(s_) {}
   virtual spectrum f(const vec3 &wi, const vec3 &wo,
                      const vec3 &n) const override;
   virtual spectrum sample_f(const vec3 &wo, vec3 &wi, const vec3 &n, RNG &rng,
@@ -109,12 +109,14 @@ private:
 
 // collection of bxdfs - will be held by the primitives
 // damn a bsdf is created at each intersection point!
+// for now we have single bxdf materials
 class bsdf {
 public:
   static constexpr int MAX = 8;
 
   bsdf() {}
-  bsdf(const SurfaceInteraction &si, double e) : si(si), eta(e), n(si.n) {}
+  bsdf(const SurfaceInteraction &si_, double e = 1)
+      : si(si_), eta(e), n(si_.n) {}
   void add(std::shared_ptr<bxdf> b) { bxdfs[nb++] = b; }
   spectrum f(const vec3 &wi, const vec3 &wo, bool refl) const;
   spectrum sample_f(const vec3 &wo, vec3 &wi, const vec3 &n, RNG &rng,
@@ -126,6 +128,22 @@ private:
   double eta;
   vec3 n;
   SurfaceInteraction si;
+};
+
+class material {
+public:
+  virtual std::shared_ptr<bsdf> get_scatter(SurfaceInteraction &s) const = 0;
+};
+
+class lambert : public material {
+public:
+  lambert(const spectrum &s_) : s(s_) {}
+
+  virtual std::shared_ptr<bsdf>
+  get_scatter(SurfaceInteraction &s) const override;
+
+private:
+  spectrum s;
 };
 
 } // namespace miao

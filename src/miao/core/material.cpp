@@ -1,5 +1,7 @@
-#include "material.hpp"
-#include "interaction.hpp"
+#include "miao/core/material.hpp"
+#include "miao/core/interaction.hpp"
+
+#include "miao/core/debug.hpp"
 
 namespace miao {
 
@@ -91,8 +93,8 @@ vec3 cosine_unit(RNG &rng) {
   double v = std::sqrt(rng.rfloat());
 
   double x = std::cos(t) * v;
-  double y = std::sin(t) * v;
-  double z = std::sqrt(max(0.0, 1.0 - x * x - y * y));
+  double z = std::sin(t) * v;
+  double y = std::sqrt(max(0.0, 1.0 - x * x - z * z));
 
   return vec3{x, y, z};
 }
@@ -114,6 +116,8 @@ spectrum lambertbsdf::sample_f(const vec3 &wo, vec3 &wi, const vec3 &n,
       w.x * i.y + w.y * j.y + w.z * k.y,
       w.x * i.z + w.y * j.z + w.z * k.z,
   };
+
+  DEBUG(i.ts(), j.ts(), k.ts(), w.ts(), wi.ts());
   pdf = this->pdf(wi, wo, n);
   return f(wi, wo, n);
 }
@@ -128,7 +132,13 @@ spectrum bsdf::f(const vec3 &wi, const vec3 &wo, bool refl) const {
 
 spectrum bsdf::sample_f(const vec3 &wo, vec3 &wi, const vec3 &n, RNG &rng,
                         double &pdf) const {
-  return spectrum{};
+  return bxdfs[0]->sample_f(wo, wi, n, rng, pdf);
+}
+
+std::shared_ptr<bsdf> lambert::get_scatter(SurfaceInteraction &si) const {
+  auto y = std::make_shared<bsdf>(si, 1);
+  y->add(std::make_shared<lambertbsdf>(s));
+  return y;
 }
 
 } // namespace miao

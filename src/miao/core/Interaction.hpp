@@ -45,10 +45,10 @@ struct interaction {
 struct SurfaceInteraction : public interaction {
   SurfaceInteraction() {}
   SurfaceInteraction(const point3 &p, const vec3 &n, const vec3 &wo, double t,
-                     const MediumInterface *m, const shape *s, const point3 &uv)
-      : interaction(p, n, wo, t, m), s(s), uv(uv) {}
+                     const MediumInterface *m, const point3 &uv)
+      : interaction(p, n, wo, t, m), uv(uv) {}
+  bsdf *get_bsdf(const ray &r);
   point3 uv;
-  const shape *s = nullptr;
   const primitive *pr = nullptr;
   // probably want a unique ptr here lol
   bsdf *b = nullptr;

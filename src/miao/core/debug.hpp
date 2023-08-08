@@ -8,12 +8,10 @@ namespace debugging {
 
 template <typename... Args>
 void print(const char *file, int line, Args... args) {
-  return;
-  //(std::clog << "[" << file << ":" << line << "] " << ... << args) <<
-  //std::endl;
+  (std::cerr << "[" << file << ":" << line << "] " << ... << args) << std::endl;
 }
-} // namespace debugging
 
+} // namespace debugging
 #define DEBUG(...) debugging::print(__FILE__, __LINE__, __VA_ARGS__)
 
 #define ASSERT(COND, MSG)                                                      \

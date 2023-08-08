@@ -11,6 +11,8 @@
 
 #include "miao/lights/light.hpp"
 
+#include "miao/core/debug.hpp"
+
 #include <iomanip>
 #include <memory>
 #include <omp.h>
@@ -26,12 +28,16 @@ void SampleIntegrator::render(const scene &s) {
   int num_threads = 1;
 
 // if openmp enabled
-#ifdef _OPENMP
+#if defined(_OPENMP) && !defined(DEBUG_ENABLED)
   num_threads = std::max(1, omp_get_max_threads() - 1) + 1;
-  omp_set_num_threads(num_threads);
 #endif
+
+  omp_set_num_threads(num_threads);
   std::cerr << "USING " << num_threads << " THREADS\n";
   std::vector<pcg32> rngs(num_threads);
+  for (int i = 0; i < num_threads; i++) {
+    rngs[i].seed(rand() * rand(), rand() * rand());
+  }
 
   auto trace = [&](int x, int y) {
     int sx = 16 * x;
@@ -56,8 +62,7 @@ void SampleIntegrator::render(const scene &s) {
         }
         // do something with L (add to film or sumthin)
 
-        L /= samples;
-        cam->f.add_sample(i, j, L, 1);
+        cam->f.add_sample(i, j, L, samples);
         // f->add(L) or something
       }
     }
@@ -94,17 +99,22 @@ spectrum PathIntegrator::Li(const ray &ra, const scene &s, RNG &rng,
     SurfaceInteraction &isect = *y;
 
     const AreaLight *alight = isect.pr->get_area_light();
-    L += throughput * alight->Le(r);
+    if (alight)
+      L += throughput * alight->Le(r);
 
-    bsdf *b = isect.b;
+    auto b = isect.pr->get_material()->get_scatter(isect);
     vec3 wo = r.d, wi;
     double pdf;
     spectrum f = b->sample_f(wo, wi, isect.n, rng, pdf);
+
+    DEBUG(wo.ts(), wi.ts(), isect.n.ts(), isect.p.ts(), pdf, " ", i);
+
     if (f.isBlack() || pdf == 0.0)
       break;
     throughput *= f * std::abs(vec3::dot(isect.n, wi)) / pdf;
 
-    r.o = isect.p + EPS * isect.n;
+    // std::cerr << "hi " << i << "bounce yee haw\n";
+    r.o = isect.p;
     r.d = wi;
     if (i > 3) {
       double q = std::max(0.05, 1 - throughput.magnitude());
