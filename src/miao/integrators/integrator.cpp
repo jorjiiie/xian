@@ -117,7 +117,7 @@ spectrum PathIntegrator::Li(const ray &ra, const scene &s, RNG &rng,
 
     if (f.isBlack() || pdf == 0.0)
       break;
-    throughput *= f * std::abs(vec3::dot(isect.n, wi)) / pdf * INV_PI;
+    throughput *= f * std::abs(vec3::dot(isect.n, wi)) / pdf;
 
     // std::cerr << "hi " << i << "bounce yee haw\n";
     r.o = isect.p;

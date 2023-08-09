@@ -73,13 +73,13 @@ int main() {
   vector<shared_ptr<light>> lights;
   lights.push_back(alight);
 
-  int width = 300;
-  int height = 300;
+  int width = 1000;
+  int height = 1000;
   film f{width, height};
   scene s{lights, std::make_shared<dumb_aggregate>(world)};
 
   TempCamera cam{f, {0, 0, -5}, {0, 1, 0}, {0, 0, 1}, 1, 0, 90};
-  ProgressiveRenderer renderer(s, cam, 20, 100);
+  ProgressiveRenderer renderer(s, cam, 20, 1000);
 
   auto callback = [&](int x) {
     freopen(("nn" + to_string(x) + ".ppm").c_str(), "w", stdout);

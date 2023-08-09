@@ -108,7 +108,7 @@ vec3 cosine_unit(RNG &rng) {
 } // namespace BXDF
 
 spectrum lambertbsdf::f(const vec3 &, const vec3 &, const vec3 &) const {
-  return s;
+  return s * INV_PI;
 }
 
 spectrum specularbsdf::f(const vec3 &, const vec3 &, const vec3 &) const {
