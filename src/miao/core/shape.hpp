@@ -13,6 +13,9 @@
 namespace miao {
 // for now, shapes will be the homebaked solution (but in theory supports
 // transforms)
+//
+vec3 uniform_sphere(RNG &rng);
+double uniform_sphere_pdf();
 
 class shape {
 public:
@@ -26,10 +29,10 @@ public:
   virtual bool intersect(const ray &r, double &t,
                          SurfaceInteraction &isect) const = 0;
 
-  virtual bool intersecthuh(const ray &r) const {
-    double t = r.maxt;
+  virtual bool intersecthuh(const ray &r_) const {
+    double t = r_.maxt;
     SurfaceInteraction i{};
-    return intersect(r, t, i);
+    return intersect(r_, t, i);
   }
 
   virtual double area() const = 0;
@@ -38,8 +41,8 @@ public:
   virtual interaction sample(RNG &r) const = 0;
   virtual double pdf(const interaction &) const { return 1.0 / area(); }
 
-  virtual interaction sample(const interaction &i, RNG &r) const {
-    return sample(r);
+  virtual interaction sample(const interaction &, RNG &rng) const {
+    return sample(rng);
   }
   virtual double pdf(const interaction &r, const vec3 &wi) const = 0;
 
@@ -54,7 +57,8 @@ public:
          double pmax)
       : shape(otw, wto, rev), radius(r), zmin(clamp(zmin, -r, r)),
         zmax(clamp(zmax, -r, r)), tmin(std::acos(clamp(zmin / r, -1.0, 1.0))),
-        tmax(clamp(zmax / r, -1.0, 1.0)), pmax(clamp(pmax, 0.0, 360.0)) {}
+        tmax(clamp(zmax / r, -1.0, 1.0)), pmax(clamp(pmax, 0.0, 360.0)),
+        origin((*otw)(point3{}, true)) {}
   virtual BBox getBBox() const override;
   virtual bool intersect(const ray &r, double &t,
                          SurfaceInteraction &isect) const override;
@@ -63,10 +67,11 @@ public:
   virtual interaction sample(const interaction &i, RNG &r) const override;
   virtual double pdf(const interaction &r, const vec3 &wi) const override;
 
-private:
+  // private:
   double radius;
   double zmin, zmax;
   double tmin, tmax, pmax;
+  vec3 origin;
 };
 } // namespace miao
 #endif

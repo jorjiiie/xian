@@ -37,7 +37,7 @@ bool refract(const vec3 &wi, const vec3 &n, double eta, vec3 &jaja) {
   return true;
 }
 
-// the schilck ap
+// the schilck ap <<
 spectrum FrConductor(double cosThetaI, const spectrum &etai,
                      const spectrum &etat, const spectrum &k) {
   cosThetaI = clamp(cosThetaI, -1.0, 1.0);
@@ -65,19 +65,19 @@ spectrum FrConductor(double cosThetaI, const spectrum &etai,
 // https://graphics.pixar.com/library/OrthonormalB/paper.pdf (but it's the
 // frisvad one)
 void onb(const vec3 &i, vec3 &j, vec3 &k) {
-  if (i.z < -0.9999) {
-    j = vec3{0, -1, 0};
-    k = vec3{-1, 0, 0};
+  if (i.y < -0.9999) {
+    j = vec3{-1, 0, 0};
+    k = vec3{0, 0, -1};
     return;
   }
-  const double a = 1.0 / (1.0 + i.z);
-  const double b = -i.x * i.y * a;
-  j = vec3{1.0 - i.x * i.x * a, b, -i.x};
-  k = vec3{b, 1.0 - i.y * i.y * a, -i.y};
+  const double a = 1.0 / (1.0 + i.y);
+  const double b = -i.x * i.z * a;
+  j = vec3{1.0 - i.x * i.x * a, -i.x, b};
+  k = vec3{-i.z, b, 1.0 - i.z * i.z * a};
 }
 vec3 changebasis(
     const vec3 &n,
-    const vec3 &w) { // changes w from w in n = (0,0,1) space to world space
+    const vec3 &w) { // changes w from w in n = (0,1,0) space to world space
   vec3 j, k;
   const vec3 &i = n;
   onb(i, j, k);
@@ -100,32 +100,30 @@ vec3 cosine_unit(RNG &rng) {
 }
 } // namespace BXDF
 
-spectrum lambertbsdf::f(const vec3 &wi, const vec3 &wo, const vec3 &n) const {
+spectrum lambertbsdf::f(const vec3 &, const vec3 &, const vec3 &) const {
   return s;
 }
-spectrum lambertbsdf::sample_f(const vec3 &wo, vec3 &wi, const vec3 &n,
-                               RNG &rng, double &pdf) const {
 
-  vec3 w = BXDF::cosine_unit(rng);
-  vec3 j, k;
-  const vec3 &i = n;
-  // i j k defines the transformation
-  BXDF::onb(i, j, k);
-  wi = vec3{
-      w.x * i.x + w.y * j.x + w.z * k.x,
-      w.x * i.y + w.y * j.y + w.z * k.y,
-      w.x * i.z + w.y * j.z + w.z * k.z,
-  };
-
-  DEBUG(i.ts(), j.ts(), k.ts(), w.ts(), wi.ts());
-  pdf = this->pdf(wi, wo, n);
-  return f(wi, wo, n);
+spectrum specularbsdf::f(const vec3 &, const vec3 &, const vec3 &) const {
+  return spectrum{};
 }
 
-spectrum bsdf::f(const vec3 &wi, const vec3 &wo, bool refl) const {
+spectrum specularbsdf::sample_f(const vec3 &wo, vec3 &wi, const vec3 &n, RNG &,
+                                double &pdf) const {
+
+  // if the other way, then we have to reflect or something right?
+  vec3 norm = n;
+  if (vec3::dot(wo, norm) > 0)
+    norm = -norm;
+  wi = wo - 2 * (vec3::dot(wo, norm)) * norm;
+  pdf = 1;
+  return fr->evaluate(vec3::dot(wi, n)) * s / std::abs(vec3::dot(wi, n));
+}
+
+spectrum bsdf::f(const vec3 &wi, const vec3 &wo, bool) const {
   spectrum f{};
-  for (auto &x : bxdfs) {
-    f += x->f(wi, wo, this->n);
+  for (int i = 0; i < nb; i++) {
+    f += bxdfs[i]->f(wi, wo, this->si.n);
   }
   return f;
 }
@@ -135,9 +133,15 @@ spectrum bsdf::sample_f(const vec3 &wo, vec3 &wi, const vec3 &n, RNG &rng,
   return bxdfs[0]->sample_f(wo, wi, n, rng, pdf);
 }
 
-std::shared_ptr<bsdf> lambert::get_scatter(SurfaceInteraction &si) const {
+std::shared_ptr<bsdf> lambert::get_scatter(const SurfaceInteraction &si) const {
   auto y = std::make_shared<bsdf>(si, 1);
   y->add(std::make_shared<lambertbsdf>(s));
+  return y;
+}
+
+std::shared_ptr<bsdf> metal::get_scatter(const SurfaceInteraction &si) const {
+  auto y = std::make_shared<bsdf>(si, 1);
+  y->add(std::make_shared<specularbsdf>(s, fr.get()));
   return y;
 }
 

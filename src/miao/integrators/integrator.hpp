@@ -13,6 +13,7 @@ namespace miao {
 class film;
 class scene;
 class camera;
+class interaction;
 
 class integrator {
 public:

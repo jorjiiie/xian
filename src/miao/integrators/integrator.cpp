@@ -1,4 +1,5 @@
-#include "integrator.hpp"
+#include "miao/integrators/integrator.hpp"
+#include "miao/integrators/common.hpp"
 
 #include "miao/cameras/camera.hpp"
 #include "miao/cameras/film.hpp"
@@ -19,6 +20,7 @@
 #include <vector>
 
 namespace miao {
+
 void SampleIntegrator::render(const scene &s) {
 
   int tile_size = 32;
@@ -98,16 +100,19 @@ spectrum PathIntegrator::Li(const ray &ra, const scene &s, RNG &rng,
     }
     SurfaceInteraction &isect = *y;
 
-    const AreaLight *alight = isect.pr->get_area_light();
-    if (alight)
-      L += throughput * alight->Le(r);
+    if (i == 0 || true) {
+      const AreaLight *alight = isect.pr->get_area_light();
+      if (alight)
+        L += throughput * alight->Le(r);
+    }
+    // L += throughput * sample_light(isect, s, rng);
 
     auto b = isect.pr->get_material()->get_scatter(isect);
     vec3 wo = r.d, wi;
     double pdf;
     spectrum f = b->sample_f(wo, wi, isect.n, rng, pdf);
 
-    DEBUG(wo.ts(), wi.ts(), isect.n.ts(), isect.p.ts(), pdf, " ", i);
+    DEBUG(wo.ts(), wi.ts(), isect.n.ts(), isect.p.ts(), pdf, " ", i, f.ts());
 
     if (f.isBlack() || pdf == 0.0)
       break;

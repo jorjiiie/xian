@@ -7,6 +7,7 @@ film::film(int width, int height) : width(width), height(height) {
                         height, std::make_pair(spectrum{}, 0)));
 }
 void film::add_sample(int x, int y, spectrum &s, int cnt) {
+
   img[x][y].first += s;
   img[x][y].second += cnt;
 }

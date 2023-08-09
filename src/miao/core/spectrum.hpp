@@ -3,6 +3,7 @@
 #define SPECTRUM_HPP
 
 #include <cmath>
+#include <string>
 
 #include "utils.hpp"
 
@@ -118,6 +119,17 @@ public:
     return false;
   }
   virtual void toRGB(double &r, double &g, double &b) const { r = g = b = 0; };
+
+  virtual std::string ts() const {
+    std::string r = "[";
+    for (int i = 0; i < n; i++) {
+      r += std::to_string(c[i]);
+      if (i < n - 1)
+        r += ", ";
+    }
+    r += "]";
+    return r;
+  }
 
   static const int nSamples = n;
 

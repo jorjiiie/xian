@@ -3,14 +3,17 @@ set(CORE_SOURCES
   core/material.cpp
   core/BBox.cpp
   core/primitive.cpp
+  core/scene.cpp
   core/shape.cpp)
 
 set(CAMERA_SOURCES
   cameras/camera.cpp
   cameras/film.cpp)
 set(INTEGRATOR_SOURCES
+  integrators/common.cpp
   integrators/integrator.cpp)
-set(LIGHT_SOURCES)
+set(LIGHT_SOURCES
+  lights/light.cpp)
 set(MATERIAL_SOURCES)
 set(RENDERER_SOURCES
   renderers/progressive.cpp)

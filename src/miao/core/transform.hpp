@@ -126,6 +126,22 @@ public:
     return Transformation(m * o.m, o.m_inv * m_inv);
   }
 
+  std::string ts() const {
+    std::string s = "[";
+    for (int i = 0; i < 4; i++) {
+      s += "[";
+      for (int j = 0; j < 4; j++) {
+        s += std::to_string(m.m[i][j]);
+        if (j < 3)
+          s += ", ";
+      }
+      s += "]";
+      if (i < 3)
+        s += ",\n";
+    }
+    return s;
+  }
+
 private:
   Matrix4 m, m_inv;
 };
