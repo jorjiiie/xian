@@ -17,12 +17,13 @@ spectrum direct(const interaction &it, const light &yo, const scene &s,
   visibility v;
   spectrum li = yo.Li(it, rng, wi, lpdf, &v);
   // test visibility
+  bxdf_t sampled;
   auto b = isect.pr->get_material()->get_scatter(isect);
   if (lpdf > 0 && !li.isBlack()) {
 
     spectrum tp{1.0};
     if (it.isSurfaceInteraction()) {
-      tp = b->f(wi, isect.wo, false) *
+      tp = b->f(wi, isect.wo, BSDF_ALL) *
            std::abs(vec3::dot(wi, isect.n)); // should be isect.sn but oh well
       spdf = b->pdf(wi, isect.wo, isect.n);  // same here
     }
@@ -47,7 +48,7 @@ spectrum direct(const interaction &it, const light &yo, const scene &s,
   {
     spectrum tp;
     // shading normals blah blah
-    tp = b->sample_f(isect.wo, wi, isect.n, rng, spdf);
+    tp = b->sample_f(isect.wo, wi, isect.n, rng, spdf, BSDF_ALL, sampled);
     tp *= std::abs(vec3::dot(wi, isect.n));
     // DEBUG("stuff ", wi.ts(), " ", spdf);
     if (spdf > 0 && !tp.isBlack()) {
@@ -55,10 +56,12 @@ spectrum direct(const interaction &it, const light &yo, const scene &s,
                          // test for this
       // check light pdf
       // lpdf = yo.pdf() ?? why is this necessary (for MIS D:)
-      lpdf = yo.pdf_li(isect, wi);
-      if (lpdf == 0)
-        return Ld;
-      weight = bh(1, spdf, 1, lpdf);
+      if (!(sampled & BSDF_SPECULAR)) {
+        lpdf = yo.pdf_li(isect, wi);
+        if (lpdf == 0)
+          return Ld;
+        weight = bh(1, spdf, 1, lpdf);
+      }
 
       // DEBUG("NONZERO\n");
       ray r{isect.p, wi, 0};

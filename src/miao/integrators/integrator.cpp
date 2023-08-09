@@ -110,7 +110,8 @@ spectrum PathIntegrator::Li(const ray &ra, const scene &s, RNG &rng,
     auto b = isect.pr->get_material()->get_scatter(isect);
     vec3 wo = r.d, wi;
     double pdf;
-    spectrum f = b->sample_f(wo, wi, isect.n, rng, pdf);
+    bxdf_t sampled;
+    spectrum f = b->sample_f(wo, wi, isect.n, rng, pdf, BSDF_ALL, sampled);
 
     DEBUG(wo.ts(), wi.ts(), isect.n.ts(), isect.p.ts(), pdf, " ", i, f.ts(),
           throughput.ts());

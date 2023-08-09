@@ -127,7 +127,7 @@ spectrum specularbsdf::sample_f(const vec3 &wo, vec3 &wi, const vec3 &n, RNG &,
   return fr->evaluate(vec3::dot(wi, n)) * s / std::abs(vec3::dot(wi, n));
 }
 
-spectrum bsdf::f(const vec3 &wi, const vec3 &wo, bool) const {
+spectrum bsdf::f(const vec3 &wi, const vec3 &wo, bxdf_t types) const {
   spectrum f{};
   for (int i = 0; i < nb; i++) {
     f += bxdfs[i]->f(wi, wo, this->si.n);
@@ -136,7 +136,10 @@ spectrum bsdf::f(const vec3 &wi, const vec3 &wo, bool) const {
 }
 
 spectrum bsdf::sample_f(const vec3 &wo, vec3 &wi, const vec3 &n, RNG &rng,
-                        double &pdf) const {
+                        double &pdf, bxdf_t types, bxdf_t &sampled) const {
+  if ((bxdfs[0]->t & types) == 0)
+    return spectrum{};
+  sampled = bxdf_t(sampled | bxdfs[0]->t);
   return bxdfs[0]->sample_f(wo, wi, n, rng, pdf);
 }
 

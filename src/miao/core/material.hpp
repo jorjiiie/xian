@@ -32,10 +32,20 @@ vec3 changebasis(const vec3 &n, const vec3 &w);
 vec3 cosine_unit(RNG &rng);
 } // namespace BXDF
 
+enum bxdf_t {
+  BSDF_REFLECTION = 1 << 0,
+  BSDF_TRANSMISSION = 1 << 1,
+  BSDF_DIFFUSE = 1 << 2,
+  BSDF_GLOSSY = 1 << 3,
+  BSDF_SPECULAR = 1 << 4,
+  BSDF_ALL = BSDF_DIFFUSE | BSDF_GLOSSY | BSDF_SPECULAR | BSDF_REFLECTION |
+             BSDF_TRANSMISSION,
+};
+
 // for btdf and brdfs
 struct bxdf {
+  bxdf(bxdf_t t_) : t(t_) {}
   virtual ~bxdf() {}
-  bxdf(bool specular = false) : is_specular(specular) {}
   virtual spectrum f(const vec3 &wi, const vec3 &wo, const vec3 &n) const = 0;
   virtual spectrum sample_f(const vec3 &wo, vec3 &wi, const vec3 &n, RNG &rng,
                             double &pdf) const {
@@ -55,8 +65,7 @@ struct bxdf {
     }
     return std::abs(vec3::dot(wi, n)) * INV_PI;
   }
-
-  bool is_specular = false;
+  bxdf_t t;
 };
 class fresnel {
 public:
@@ -95,7 +104,8 @@ public:
 
 class lambertbsdf : public bxdf {
 public:
-  lambertbsdf(const spectrum &s_) : s(s_) {}
+  lambertbsdf(const spectrum &s_)
+      : bxdf(bxdf_t(BSDF_REFLECTION | BSDF_DIFFUSE)), s(s_) {}
   virtual spectrum f(const vec3 &wi, const vec3 &wo,
                      const vec3 &n) const override;
 
@@ -105,11 +115,27 @@ private:
 
 class specularbsdf : public bxdf {
 public:
-  specularbsdf(const spectrum &s_, fresnel *f) : s(s_), fr(f) {}
+  specularbsdf(const spectrum &s_, fresnel *f)
+      : bxdf(bxdf_t(BSDF_SPECULAR | BSDF_REFLECTION)), s(s_), fr(f) {}
   virtual spectrum f(const vec3 &wi, const vec3 &wo,
                      const vec3 &n) const override;
   virtual spectrum sample_f(const vec3 &wo, vec3 &wi, const vec3 &n, RNG &rng,
                             double &pdf) const override;
+  virtual double pdf(const vec3 &, const vec3 &, const vec3 &) const override {
+    return 0;
+  }
+
+private:
+  spectrum s;
+  fresnel *fr;
+};
+
+class specularbtdf : public bxdf {
+public:
+  specularbtdf(const spectrum &s_, fresnel *f)
+      : bxdf(bxdf_t(BSDF_SPECULAR | BSDF_TRANSMISSION)), s(s_), fr(f) {}
+  virtual spectrum f(const vec3 &wi, const vec3 &wo,
+                     const vec3 &n) const override;
 
 private:
   spectrum s;
@@ -126,9 +152,9 @@ public:
   bsdf() {}
   bsdf(const SurfaceInteraction &si_, double e = 1) : eta(e), si(si_) {}
   void add(std::shared_ptr<bxdf> b) { bxdfs[nb++] = b; }
-  spectrum f(const vec3 &wi, const vec3 &wo, bool refl) const;
+  spectrum f(const vec3 &wi, const vec3 &wo, bxdf_t types) const;
   virtual spectrum sample_f(const vec3 &wo, vec3 &wi, const vec3 &n, RNG &rng,
-                            double &pdf) const;
+                            double &pdf, bxdf_t types, bxdf_t &sampled) const;
   double pdf(const vec3 &wi, const vec3 &wo, const vec3 &n) const {
     double tot = 0;
     for (int i = 0; i < nb; i++) {

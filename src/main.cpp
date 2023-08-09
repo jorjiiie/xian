@@ -44,8 +44,8 @@ int main() {
   shared_ptr<material> bs = make_shared<lambert>(spectrum{.5, .5, .5});
 
   shared_ptr<material> spec = make_shared<metal>(spectrum{.5, 0.9, 0.7});
-  Transformation vertshift = Transformation::translate({0, 5, 0});
-  Transformation ov = Transformation::translate({0, -5, 0});
+  Transformation vertshift = Transformation::translate({-1, 5, 0});
+  Transformation ov = Transformation::translate({1, -5, 0});
 
   Transformation move = Transformation::translate({-1, -2, 1});
   Transformation back = Transformation::translate({1, 2, -1});
@@ -54,12 +54,12 @@ int main() {
   GeoPrimitive s2{make_shared<sphere>(&move, &back, false, 1, -1, 1, 0, 0, 0),
                   make_shared<lambert>(spectrum{.2, .7, .8}), nullptr};
   GeoPrimitive s3{
-      make_shared<sphere>(&vertshift, &ov, false, 3, -3, 3, 0, 0, 0),
-      make_shared<lambert>(spectrum{.7, .7, .7}), nullptr};
-  GeoPrimitive s4{
-      make_shared<sphere>(&ov, &vertshift, false, 3, -3, 3, 0, 0, 0), bs,
+      make_shared<sphere>(&vertshift, &ov, false, 3, -3, 3, 0, 0, 0), spec,
       nullptr};
-  GeoPrimitive s5{make_shared<sphere>(&id, &id, false, 7, 0, 0, 0, 0, 0), bs,
+  GeoPrimitive s4{
+      make_shared<sphere>(&ov, &vertshift, false, 3, -3, 3, 0, 0, 0),
+      make_shared<lambert>(spectrum{0.9, 0.5, 0.5}), nullptr};
+  GeoPrimitive s5{make_shared<sphere>(&id, &id, false, 8, 0, 0, 0, 0, 0), bs,
                   nullptr};
 
   vector<GeoPrimitive> x;
@@ -73,13 +73,13 @@ int main() {
   vector<shared_ptr<light>> lights;
   lights.push_back(alight);
 
-  int width = 1000;
-  int height = 1000;
+  int width = 300;
+  int height = 300;
   film f{width, height};
   scene s{lights, std::make_shared<dumb_aggregate>(world)};
 
   TempCamera cam{f, {0, 0, -5}, {0, 1, 0}, {0, 0, 1}, 1, 0, 90};
-  ProgressiveRenderer renderer(s, cam, 20, 1000);
+  ProgressiveRenderer renderer(s, cam, 20, 10);
 
   auto callback = [&](int x) {
     freopen(("nn" + to_string(x) + ".ppm").c_str(), "w", stdout);
