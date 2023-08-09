@@ -21,7 +21,7 @@ bool sphere::intersect(const ray &r, double &t,
   point3 hit;
   vec3 oc = r.o - origin;
 
-  DEBUG(origin.ts());
+  //  DEBUG(origin.ts());
 
   double a = r.d.msq();
   double b = 2 * vec3::dot(oc, r.d);
@@ -46,8 +46,9 @@ bool sphere::intersect(const ray &r, double &t,
 
   isect.t = T;
 
-  DEBUG("hitpoint is ", hp.ts(), " normal is ", isect.n.ts(), " origin is ",
-        origin.ts());
+  /* DEBUG("hitpoint is ", hp.ts(), " normal is ", isect.n.ts(), " origin is ",
+   */
+  /*       origin.ts()); */
 
   t = T;
   return true;

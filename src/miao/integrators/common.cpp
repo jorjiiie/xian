@@ -26,6 +26,7 @@ spectrum direct(const interaction &it, const light &yo, const scene &s,
            std::abs(vec3::dot(wi, isect.n)); // should be isect.sn but oh well
       spdf = b->pdf(wi, isect.wo, isect.n);  // same here
     }
+    DEBUG("JASKDLJASKLDJAKSLDJASDLKJAKSD");
     if (!tp.isBlack()) {
       double weight = bh(1, lpdf, 1, spdf);
       /* DEBUG("we have something here", tp.ts(), " ", li.ts(), " ", weight, "
@@ -83,6 +84,7 @@ spectrum sample_light(const interaction &it, const scene &s, RNG &rng) {
   auto spec = direct(it, y, s, rng) * n;
 
   DEBUG("HIII ", sampled, " ", spec.ts());
+
   return spec;
 }
 

@@ -100,23 +100,24 @@ spectrum PathIntegrator::Li(const ray &ra, const scene &s, RNG &rng,
     }
     SurfaceInteraction &isect = *y;
 
-    if (i == 0 || true) {
+    if (i == 0) {
       const AreaLight *alight = isect.pr->get_area_light();
       if (alight)
         L += throughput * alight->Le(r);
     }
-    // L += throughput * sample_light(isect, s, rng);
+    L += throughput * sample_light(isect, s, rng);
 
     auto b = isect.pr->get_material()->get_scatter(isect);
     vec3 wo = r.d, wi;
     double pdf;
     spectrum f = b->sample_f(wo, wi, isect.n, rng, pdf);
 
-    DEBUG(wo.ts(), wi.ts(), isect.n.ts(), isect.p.ts(), pdf, " ", i, f.ts());
+    DEBUG(wo.ts(), wi.ts(), isect.n.ts(), isect.p.ts(), pdf, " ", i, f.ts(),
+          throughput.ts());
 
     if (f.isBlack() || pdf == 0.0)
       break;
-    throughput *= f * std::abs(vec3::dot(isect.n, wi)) / pdf;
+    throughput *= f * std::abs(vec3::dot(isect.n, wi)) / pdf * INV_PI;
 
     // std::cerr << "hi " << i << "bounce yee haw\n";
     r.o = isect.p;
