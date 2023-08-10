@@ -31,7 +31,7 @@ void SampleIntegrator::render(const scene &s) {
 
 // if openmp enabled
 #if defined(_OPENMP) && !defined(DEBUG_ENABLED)
-  num_threads = std::max(1, omp_get_max_threads() - 1) + 1;
+  num_threads = std::max(1, omp_get_max_threads());
 #endif
 
   omp_set_num_threads(num_threads);

@@ -8,6 +8,8 @@
 #include "miao/core/transform.hpp"
 
 namespace miao {
+
+// camera holds a medium to describe the medium of the medium
 class camera {
 public:
   camera(const Transformation &ctw, film &f, double t0, double t1)

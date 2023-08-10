@@ -4,6 +4,7 @@ set(CORE_SOURCES
   core/BBox.cpp
   core/primitive.cpp
   core/scene.cpp
+  core/transform.cpp
   core/shape.cpp)
 
 set(CAMERA_SOURCES

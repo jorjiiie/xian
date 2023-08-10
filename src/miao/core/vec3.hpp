@@ -13,6 +13,7 @@ namespace miao {
 struct vec3 {
   vec3() : x(0), y(0), z(0) {}
   vec3(double x_, double y_, double z_) : x(x_), y(y_), z(z_) {}
+  static constexpr double eps = 1e-6;
 
   // element wise operators
   vec3 &operator+=(const vec3 &v) {

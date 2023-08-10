@@ -100,11 +100,11 @@ std::optional<SurfaceInteraction> bvh::intersect(const ray &r,
                                                  double &t) const {
   std::optional<SurfaceInteraction> ret = {};
   t = D_INFINITY;
-  int q[64] = {};
+  int q[64] = {}; // ideally this is big enough for the queue but it's really
+                  // not a guarantee since i don't split down the middle
   int qpos = 0;
   int c = 0;
   while (true) {
-    DEBUG(qpos, " ", tt, " ", c);
     const _bvhnode &node = nodes_[c];
     if (node.b.intersecthuh(r)) {
       if (node.nprims > 0) {

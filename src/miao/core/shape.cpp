@@ -1,4 +1,14 @@
 #include "shape.hpp"
+#include "miao/core/interaction.hpp"
+#include "miao/core/transform.hpp"
+
+#include <fstream>
+#include <iostream>
+#include <memory>
+#include <regex>
+#include <sstream>
+#include <string>
+#include <vector>
 
 namespace miao {
 
@@ -68,4 +78,135 @@ interaction sphere::sample(const interaction &, RNG &r) const {
 double sphere::pdf(const interaction &r, const vec3 &) const {
   return shape::pdf(r);
 }
+
+TriangleMesh TriangleMesh::read_obj(std::istream &str,
+                                    const Transformation *otw,
+                                    const Transformation *wto) {
+
+  std::vector<vec3> vertices;
+  std::vector<vec3> normals;
+  std::vector<vec3> textures;
+  std::vector<std::array<std::array<int, 3>, 3>> faces;
+  std::string cur_line;
+  while (!str.eof()) {
+    std::getline(str, cur_line);
+    if (cur_line.size() == 0 || cur_line[0] == '#')
+      continue;
+    std::istringstream ss(cur_line);
+    std::string type;
+    ss >> type;
+    if (type == "v") {
+      double a, b, c;
+      ss >> a >> b >> c; // ignores w
+      vertices.push_back(vec3{a, b, c});
+    } else if (type == "vn") {
+      double a, b, c;
+      ss >> a >> b >> c;
+      normals.push_back(vec3{a, b, c});
+    } else if (type == "f") {
+      std::regex r("/");
+      std::string a, x, y, z;
+      std::array<std::array<int, 3>, 3> indices;
+      for (int i = 0; i < 3; i++) {
+        ss >> a;
+        std::sregex_token_iterator iter(a.begin(), a.end(), r, -1);
+        std::sregex_token_iterator end;
+        int j = 0;
+        for (; iter != end && j < 3; iter++, j++) {
+          std::string tok = *iter;
+          if (tok.length() == 0) {
+            indices[j][i] = -1;
+            continue;
+          }
+          indices[j][i] = std::stoi(tok) - 1;
+          ASSERT(indices[j][i] >= 0, "invalid indexes!");
+        }
+      }
+      faces.push_back(indices);
+    }
+  }
+  DEBUG(faces.size(), " ", vertices.size(), " ", normals.size(), " ",
+        textures.size());
+  // exit(1);
+  return TriangleMesh(otw, wto, vertices, normals, textures, faces);
+}
+
+TriangleMesh::TriangleMesh(const Transformation *otw, const Transformation *wto,
+                           std::vector<vec3> vertices_,
+                           std::vector<vec3> normals_,
+                           std::vector<vec3> textures_,
+                           std::vector<std::array<std::array<int, 3>, 3>> faces)
+    : v(vertices_), n(normals_), t(textures_) {
+
+  for (vec3 &vec : v)
+    vec = (*otw)(vec, true); // these are points
+
+  for (vec3 &vec : n)
+    vec = (*otw)(vec).unit();
+
+  for (auto &z : faces) {
+    tris.push_back(std::make_shared<triangle>(this, z));
+  }
+}
+
+BBox triangle::getBBox() const {
+  const vec3 &v1 = mesh->v[vertices[0]];
+  const vec3 &v2 = mesh->v[vertices[1]];
+  const vec3 &v3 = mesh->v[vertices[2]];
+  return BBox{v1, v2}.Union(v3);
+}
+BBox triangle::worldBBox() const { return getBBox(); }
+
+bool triangle::intersect(const ray &r, double &t,
+                         SurfaceInteraction &isect) const {
+  vec3 e1, e2, h, s, q;
+  double a, f, u, v;
+  const vec3 &v1 = mesh->v[vertices[0]];
+  const vec3 &v2 = mesh->v[vertices[1]];
+  const vec3 &v3 = mesh->v[vertices[2]];
+
+  e1 = v2 - v1;
+  e2 = v3 - v1;
+  h = vec3::cross(r.d, e2);
+  a = vec3::dot(e1, h);
+
+  if (std::abs(a) < vec3::eps)
+    return {};
+
+  f = 1.0 / a;
+  s = r.o - v1;
+  u = f * vec3::dot(s, h);
+  if (u < 0 || u > 1.0)
+    return {};
+
+  q = vec3::cross(s, e1);
+  v = f * vec3::dot(r.d, q);
+  if (v < 0 || u + v > 1.0)
+    return {};
+
+  double tt = f * vec3::dot(e2, q);
+  if (tt < vec3::eps)
+    return {};
+  t = tt;
+
+  isect.p = r.o + t * r.d;
+  isect.wo = r.d;
+  isect.n = gnormal();
+  isect.sn = snormal(u, v);
+  isect.t = t;
+
+  return true;
+}
+
+double triangle::area() const {
+  const vec3 &v1 = mesh->v[vertices[0]];
+  const vec3 &v2 = mesh->v[vertices[1]];
+  const vec3 &v3 = mesh->v[vertices[2]];
+  return 0.5 * std::abs(vec3::cross(v2 - v1, v3 - v1).magnitude());
+}
+
+interaction triangle::sample(RNG &r) const {}
+interaction triangle::sample(const interaction &i, RNG &r) const {}
+double triangle::pdf(const interaction &r, const vec3 &wi) const {}
+
 } // namespace miao

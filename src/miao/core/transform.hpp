@@ -18,6 +18,7 @@ public:
   Transformation(const Matrix4 &m_, const Matrix4 &m_inv_)
       : m(m_), m_inv(m_inv_) {}
 
+  static const Transformation identity;
   static Transformation inverse(const Transformation &t) {
     return Transformation{t.m_inv, t.m};
   }
