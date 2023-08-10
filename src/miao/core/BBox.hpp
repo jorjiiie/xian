@@ -89,6 +89,8 @@ struct BBox {
   // optimized variant is ommitted
   bool intersect(const ray &r, double &t0, double &t1) const;
 
+  bool intersecthuh(const ray &r) const;
+
   point3 mn, mx;
 };
 } // namespace miao

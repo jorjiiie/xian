@@ -19,4 +19,8 @@ bool BBox::intersect(const ray &r, double &t0, double &t1) const {
   t1 = h1;
   return true;
 }
+bool BBox::intersecthuh(const ray &r) const {
+  double a;
+  return intersect(r, a, a);
+}
 } // namespace miao

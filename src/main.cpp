@@ -5,6 +5,7 @@
 #include "miao/core/scene.hpp"
 #include "miao/core/shape.hpp"
 #include "miao/core/transform.hpp"
+#include "miao/ds/bvh.hpp"
 #include "miao/lights/light.hpp"
 #include "miao/renderers/progressive.hpp"
 
@@ -101,7 +102,11 @@ int main() {
   x.push_back(CEIL);
   x.push_back(FLOOR);
   x.push_back(BACK_WALL);
-  dumb_aggregate world{x};
+  vector<shared_ptr<primitive>> arr;
+  for (auto &z : x) {
+    arr.push_back(make_shared<GeoPrimitive>(z));
+  }
+  bvh world{arr};
 
   vector<shared_ptr<light>> lights;
   lights.push_back(alight);
@@ -109,10 +114,10 @@ int main() {
   int width = 500;
   int height = 500;
   film f{width, height};
-  scene s{lights, std::make_shared<dumb_aggregate>(world)};
+  scene s{lights, std::make_shared<bvh>(world)};
 
-  TempCamera cam{f, {0, 0, -3}, {0, 1, 0}, {0, 0, 1}, 1, 0, 90};
-  ProgressiveRenderer renderer(s, cam, 20, 200);
+  TempCamera cam{f, {0, 0, -5}, {0, 1, 0}, {0, 0, 1}, 1, 0, 90};
+  ProgressiveRenderer renderer(s, cam, 20, 10);
 
   auto callback = [&](int x) {
     freopen(("nn" + to_string(x) + ".ppm").c_str(), "w", stdout);
