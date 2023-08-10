@@ -8,7 +8,7 @@ bool visibility::visible(const scene &s) const {
 
   auto y = s.intersect(r, 0);
   if (y) {
-    DEBUG("maxt is ", maxt, " ", y->t);
+    // DEBUG("maxt is ", maxt, " ", y->t);
     return !(y->t + EPS < maxt);
   }
   FAIL("WTF");

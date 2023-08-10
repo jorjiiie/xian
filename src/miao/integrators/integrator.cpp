@@ -91,7 +91,7 @@ spectrum PathIntegrator::Li(const ray &ra, const scene &s, RNG &rng,
                             int depth) const {
   spectrum L{};
   spectrum throughput{1.0};
-  bool lastSpecular = true;
+  bool lastSpecular = false;
   ray r = ra;
   for (int i = 0; i < m_depth; i++) {
     auto y = s.intersect(r, 0);
@@ -100,7 +100,7 @@ spectrum PathIntegrator::Li(const ray &ra, const scene &s, RNG &rng,
     }
     SurfaceInteraction &isect = *y;
 
-    if (i == 0) {
+    if (i == 0 || lastSpecular) {
       const AreaLight *alight = isect.pr->get_area_light();
       if (alight)
         L += throughput * alight->Le(r);
@@ -110,11 +110,18 @@ spectrum PathIntegrator::Li(const ray &ra, const scene &s, RNG &rng,
     auto b = isect.pr->get_material()->get_scatter(isect);
     vec3 wo = r.d, wi;
     double pdf;
-    bxdf_t sampled;
+    bxdf_t sampled = BSDF_NONE;
     spectrum f = b->sample_f(wo, wi, isect.n, rng, pdf, BSDF_ALL, sampled);
 
-    DEBUG(wo.ts(), wi.ts(), isect.n.ts(), isect.p.ts(), pdf, " ", i, f.ts(),
-          throughput.ts());
+    lastSpecular = (sampled & BSDF_SPECULAR) != 0;
+
+    if (lastSpecular && (sampled & BSDF_TRANSMISSION) != 0) {
+
+      DEBUG(wo.ts(), wi.ts(), isect.n.ts(), isect.p.ts(), pdf, " ", i, f.ts(),
+            throughput.ts(), " ", BSDF_ALL, " ", sampled);
+      DEBUG(BSDF_REFLECTION, " ", BSDF_TRANSMISSION, " ", BSDF_DIFFUSE, " ",
+            BSDF_GLOSSY, " ", BSDF_SPECULAR, " ", BSDF_ALL);
+    }
 
     if (f.isBlack() || pdf == 0.0)
       break;

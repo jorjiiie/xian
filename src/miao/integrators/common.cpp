@@ -27,7 +27,8 @@ spectrum direct(const interaction &it, const light &yo, const scene &s,
            std::abs(vec3::dot(wi, isect.n)); // should be isect.sn but oh well
       spdf = b->pdf(wi, isect.wo, isect.n);  // same here
     }
-    DEBUG("JASKDLJASKLDJAKSLDJASDLKJAKSD");
+
+    // DEBUG("JASKDLJASKLDJAKSLDJASDLKJAKSD");
     if (!tp.isBlack()) {
       double weight = bh(1, lpdf, 1, spdf);
       /* DEBUG("we have something here", tp.ts(), " ", li.ts(), " ", weight, "
@@ -35,7 +36,7 @@ spectrum direct(const interaction &it, const light &yo, const scene &s,
       /*       lpdf, " ", spdf); */
       if (v.visible(s)) {
         Ld += tp * li * weight / lpdf;
-        DEBUG("VISIBLE");
+        // DEBUG("VISIBLE");
       }
       // else
 
@@ -47,6 +48,7 @@ spectrum direct(const interaction &it, const light &yo, const scene &s,
 
   {
     spectrum tp;
+    sampled = BSDF_NONE;
     // shading normals blah blah
     tp = b->sample_f(isect.wo, wi, isect.n, rng, spdf, BSDF_ALL, sampled);
     tp *= std::abs(vec3::dot(wi, isect.n));
@@ -86,7 +88,7 @@ spectrum sample_light(const interaction &it, const scene &s, RNG &rng) {
 
   auto spec = direct(it, y, s, rng) * n;
 
-  DEBUG("HIII ", sampled, " ", spec.ts());
+  //  DEBUG("HIII ", sampled, " ", spec.ts());
 
   return spec;
 }

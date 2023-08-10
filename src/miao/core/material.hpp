@@ -33,6 +33,7 @@ vec3 cosine_unit(RNG &rng);
 } // namespace BXDF
 
 enum bxdf_t {
+  BSDF_NONE = 0,
   BSDF_REFLECTION = 1 << 0,
   BSDF_TRANSMISSION = 1 << 1,
   BSDF_DIFFUSE = 1 << 2,
@@ -52,7 +53,7 @@ struct bxdf {
     wi = BXDF::cosine_unit(rng);
     wi = BXDF::changebasis(n, wi);
     if (vec3::dot(wo, n) > 0) {
-      DEBUG(" supposed to flip?");
+      // DEBUG(" supposed to flip?");
       wi = -wi;
     }
     pdf = this->pdf(wi, wo, n);
@@ -60,7 +61,7 @@ struct bxdf {
   }
   virtual double pdf(const vec3 &wi, const vec3 &wo, const vec3 &n) const {
     if (vec3::dot(wi, n) * vec3::dot(wo, n) > 0) {
-      DEBUG(" flipped oh no");
+      // DEBUG(" flipped oh no");
       return 0;
     }
     return std::abs(vec3::dot(wi, n)) * INV_PI;
@@ -130,16 +131,45 @@ private:
   fresnel *fr;
 };
 
+// scaling on particle transport
 class specularbtdf : public bxdf {
 public:
-  specularbtdf(const spectrum &s_, fresnel *f)
-      : bxdf(bxdf_t(BSDF_SPECULAR | BSDF_TRANSMISSION)), s(s_), fr(f) {}
+  specularbtdf(const spectrum &s_, double etaA_, double etaB_)
+      : bxdf(bxdf_t(BSDF_SPECULAR | BSDF_TRANSMISSION)), s(s_), etaA(etaA_),
+        etaB(etaB_), fr(etaA_, etaB_) {}
   virtual spectrum f(const vec3 &wi, const vec3 &wo,
                      const vec3 &n) const override;
+  virtual spectrum sample_f(const vec3 &wo, vec3 &wi, const vec3 &n, RNG &rng,
+                            double &pdf) const override;
+  virtual double pdf(const vec3 &, const vec3 &, const vec3 &) const override {
+    return 0;
+  }
 
 private:
   spectrum s;
-  fresnel *fr;
+  double etaA, etaB;
+  frdielec fr;
+};
+
+// handles total internal reflection
+class specular : public bxdf {
+public:
+  specular(const spectrum &R, const spectrum &T, double etaA_, double etaB_)
+      : bxdf(bxdf_t(BSDF_REFLECTION | BSDF_TRANSMISSION | BSDF_SPECULAR)), r(R),
+        t(T), fr(etaA_, etaB_), etaA(etaA_), etaB(etaB_) {}
+  virtual spectrum f(const vec3 &, const vec3 &, const vec3 &) const override {
+    return spectrum{};
+  }
+  virtual spectrum sample_f(const vec3 &wo, vec3 &wi, const vec3 &n, RNG &rng,
+                            double &pdf) const override;
+  double pdf(const vec3 &, const vec3 &, const vec3 &) const override {
+    return 0;
+  }
+
+private:
+  spectrum r, t;
+  double etaA, etaB;
+  frdielec fr;
 };
 
 // collection of bxdfs - will be held by the primitives
@@ -155,10 +185,12 @@ public:
   spectrum f(const vec3 &wi, const vec3 &wo, bxdf_t types) const;
   virtual spectrum sample_f(const vec3 &wo, vec3 &wi, const vec3 &n, RNG &rng,
                             double &pdf, bxdf_t types, bxdf_t &sampled) const;
-  double pdf(const vec3 &wi, const vec3 &wo, const vec3 &n) const {
+  double pdf(const vec3 &wi, const vec3 &wo, const vec3 &n,
+             bxdf_t types = BSDF_ALL) const {
     double tot = 0;
     for (int i = 0; i < nb; i++) {
-      tot += bxdfs[i]->pdf(wi, wo, n);
+      if (bxdfs[i]->t & types)
+        tot += bxdfs[i]->pdf(wi, wo, n);
     }
     return tot;
   }
@@ -198,6 +230,18 @@ public:
 private:
   std::shared_ptr<fresnel> fr;
   spectrum s;
+};
+
+class glass : public material {
+public:
+  glass(const spectrum &s_, double etaA_, double etaB_)
+      : etaA(etaA_), etaB(etaB_), s(s_) {}
+  virtual std::shared_ptr<bsdf>
+  get_scatter(const SurfaceInteraction &s) const override;
+
+private:
+  spectrum s;
+  double etaA, etaB;
 };
 
 } // namespace miao

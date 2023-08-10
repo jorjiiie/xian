@@ -34,6 +34,17 @@ int main() {
   vec3 dD{1, 1, 0};
   Transformation tt = Transformation::translate(dD);
   Transformation invtt = Transformation::translate(-dD);
+  Transformation left_wall = Transformation::translate(vec3{10005, 0, 0});
+  Transformation left_wall_inv = Transformation::translate(vec3{-10005, 0, 0});
+  Transformation move_up = Transformation::translate({0, 10005, 0});
+  Transformation move_down = Transformation::translate({0, -10005, 0});
+  Transformation move_back = Transformation::translate({0, 0, 10005});
+  Transformation move_forward = Transformation::translate({0, 0, -10005});
+
+  shared_ptr<material> green_wall =
+      make_shared<lambert>(spectrum{0.3, 0.9, 0.5});
+  shared_ptr<material> red_wall = make_shared<lambert>(spectrum{0.9, 0.4, 0.4});
+
   // DEBUG(tt.ts(), "\n\n", invtt.ts());
   // exit(0);
 
@@ -43,6 +54,41 @@ int main() {
 
   shared_ptr<material> bs = make_shared<lambert>(spectrum{.5, .5, .5});
 
+  shared_ptr<material> gl =
+      make_shared<glass>(spectrum{0.9, 0.9, 0.9}, 1.0, 1.5);
+
+  /* { */
+  /*   pcg32 rng; */
+  /*   SurfaceInteraction ee; */
+  /*   ee.n = {0, 1, 0}; */
+  /*   ee.wo = vec3{0.5, -0.5, 0}.unit(); */
+  /*   auto bsd = gl->get_scatter(ee); */
+  /*   vec3 wi; */
+  /*   double pdf; */
+  /*   bxdf_t abc = BSDF_NONE; */
+  /**/
+  /*   auto f = bsd->sample_f(ee.wo, wi, ee.n, rng, pdf, BSDF_ALL, abc); */
+  /*   DEBUG(ee.n.ts(), " ", ee.wo.ts(), " ", wi.ts(), " ", pdf, " ", f.ts());
+   */
+  /*   exit(1); */
+  /* } */
+
+  GeoPrimitive LW{make_shared<sphere>(&left_wall, &left_wall_inv, false, 10000,
+                                      0, 0, 0, 0, 0),
+                  red_wall, nullptr};
+  GeoPrimitive RW{make_shared<sphere>(&left_wall_inv, &left_wall, false, 10000,
+                                      0, 0, 0, 0, 0),
+                  green_wall, nullptr};
+  GeoPrimitive CEIL{
+      make_shared<sphere>(&move_up, &move_down, false, 10000, 0, 0, 0, 0, 0),
+      bs, nullptr};
+  GeoPrimitive FLOOR{
+      make_shared<sphere>(&move_down, &move_up, false, 10000, 0, 0, 0, 0, 0),
+      bs, nullptr};
+
+  GeoPrimitive BACK_WALL{make_shared<sphere>(&move_back, &move_forward, false,
+                                             10000, 0, 0, 0, 0, 0),
+                         bs, nullptr};
   shared_ptr<material> spec = make_shared<metal>(spectrum{.5, 0.9, 0.7});
   Transformation vertshift = Transformation::translate({-1, 5, 0});
   Transformation ov = Transformation::translate({1, -5, 0});
@@ -52,7 +98,8 @@ int main() {
 
   GeoPrimitive jaja{lc, bs, alight};
   GeoPrimitive s2{make_shared<sphere>(&move, &back, false, 1, -1, 1, 0, 0, 0),
-                  make_shared<lambert>(spectrum{.2, .7, .8}), nullptr};
+                  gl, nullptr};
+  // make_shared<lambert>(spectrum{.2, .7, .8}), nullptr};
   GeoPrimitive s3{
       make_shared<sphere>(&vertshift, &ov, false, 3, -3, 3, 0, 0, 0), spec,
       nullptr};
@@ -67,7 +114,12 @@ int main() {
   x.push_back(s2);
   x.push_back(s3);
   x.push_back(s4);
-  x.push_back(s5);
+  // x.push_back(s5);
+  x.push_back(LW);
+  x.push_back(RW);
+  x.push_back(CEIL);
+  x.push_back(FLOOR);
+  x.push_back(BACK_WALL);
   dumb_aggregate world{x};
 
   vector<shared_ptr<light>> lights;
@@ -78,7 +130,7 @@ int main() {
   film f{width, height};
   scene s{lights, std::make_shared<dumb_aggregate>(world)};
 
-  TempCamera cam{f, {0, 0, -5}, {0, 1, 0}, {0, 0, 1}, 1, 0, 90};
+  TempCamera cam{f, {0, 0, -3}, {0, 1, 0}, {0, 0, 1}, 1, 0, 90};
   ProgressiveRenderer renderer(s, cam, 20, 10);
 
   auto callback = [&](int x) {
