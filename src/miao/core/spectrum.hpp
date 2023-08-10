@@ -5,7 +5,7 @@
 #include <cmath>
 #include <string>
 
-#include "utils.hpp"
+#include "miao/core/utils.hpp"
 
 namespace miao {
 template <int n> class BaseSpectrum {

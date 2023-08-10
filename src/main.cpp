@@ -5,6 +5,7 @@
 #include "miao/core/scene.hpp"
 #include "miao/core/shape.hpp"
 #include "miao/core/transform.hpp"
+#include "miao/core/utils.hpp"
 #include "miao/ds/bvh.hpp"
 #include "miao/lights/light.hpp"
 #include "miao/renderers/progressive.hpp"
@@ -18,6 +19,8 @@
 using namespace std;
 using namespace miao;
 
+int64_t cnter_::bbox_tests = 0;
+int64_t cnter_::prim_tests = 0;
 int to_8bit(double d) { return miao::max(miao::min(1.0, d), 0.0) * 255; }
 
 void tmp(film::pix &p, int s) {
@@ -102,6 +105,7 @@ int main() {
   x.push_back(CEIL);
   x.push_back(FLOOR);
   x.push_back(BACK_WALL);
+  dumb_aggregate da{x};
   vector<shared_ptr<primitive>> arr;
   for (auto &z : x) {
     arr.push_back(make_shared<GeoPrimitive>(z));
@@ -114,13 +118,16 @@ int main() {
   int width = 500;
   int height = 500;
   film f{width, height};
-  scene s{lights, std::make_shared<bvh>(world)};
+  // scene s{lights, std::make_shared<bvh>(world)};
+  scene s{lights, std::make_shared<dumb_aggregate>(da)};
 
   TempCamera cam{f, {0, 0, -5}, {0, 1, 0}, {0, 0, 1}, 1, 0, 90};
   ProgressiveRenderer renderer(s, cam, 20, 10);
 
   auto callback = [&](int x) {
     freopen(("nn" + to_string(x) + ".ppm").c_str(), "w", stdout);
+    std::cerr << "bbox tests: " << cnter_::bbox_tests << " "
+              << " primitive tests: " << cnter_::prim_tests << "\n";
     cout << "P3 " << width << " " << height << "\n255\n";
     for (int i = height - 1; i >= 0; --i) {
       for (int j = 0; j < width; j++) {

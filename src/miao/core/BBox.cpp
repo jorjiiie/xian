@@ -2,6 +2,7 @@
 
 namespace miao {
 bool BBox::intersect(const ray &r, double &t0, double &t1) const {
+  cnter_::bbox_tests++;
   double h0 = 0, h1 = r.maxt;
   for (int i = 0; i < 3; i++) {
     double inv_dn = 1.0 / r.d[i];

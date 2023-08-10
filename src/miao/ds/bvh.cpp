@@ -99,7 +99,7 @@ BBox bvh::worldbound() const { return nodes_[0].b; }
 std::optional<SurfaceInteraction> bvh::intersect(const ray &r,
                                                  double &t) const {
   std::optional<SurfaceInteraction> ret = {};
-  double tt = D_INFINITY;
+  t = D_INFINITY;
   int q[64] = {};
   int qpos = 0;
   int c = 0;
@@ -112,14 +112,8 @@ std::optional<SurfaceInteraction> bvh::intersect(const ray &r,
           // we don't have ray max unforunately
           double tmp = 0;
           auto y = p[node.prim_offset + i]->intersect(r, tmp);
-          if (y) {
-            if (ret) {
-              if (tt > tmp) {
-                ret = std::move(y), tt = tmp;
-              }
-            } else {
-              ret = std::move(y);
-            }
+          if (y && (!ret || t > tmp)) {
+            ret = std::move(y), t = tmp;
           }
         }
         if (qpos == 0)

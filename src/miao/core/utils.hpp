@@ -12,6 +12,11 @@ namespace miao {
 
 const double D_INFINITY = std::numeric_limits<double>::max();
 
+struct cnter_ {
+  static int64_t prim_tests;
+  static int64_t bbox_tests;
+};
+
 // max of two Ts
 template <typename T> inline T max(const T &a, const T &b) {
   return (a < b ? b : a);

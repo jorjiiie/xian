@@ -1,14 +1,14 @@
 #pragma once
-#include "utils.hpp"
+#include "miao/core/utils.hpp"
 #ifndef SHAPE_HPP
 #define SHAPE_HPP
 
-#include "BBox.hpp"
-#include "interaction.hpp"
-#include "ray.hpp"
-#include "rng.hpp"
-#include "transform.hpp"
-#include "vec3.hpp"
+#include "miao/core/BBox.hpp"
+#include "miao/core/interaction.hpp"
+#include "miao/core/ray.hpp"
+#include "miao/core/rng.hpp"
+#include "miao/core/transform.hpp"
+#include "miao/core/vec3.hpp"
 
 namespace miao {
 // for now, shapes will be the homebaked solution (but in theory supports
