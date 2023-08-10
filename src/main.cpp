@@ -45,9 +45,6 @@ int main() {
       make_shared<lambert>(spectrum{0.3, 0.9, 0.5});
   shared_ptr<material> red_wall = make_shared<lambert>(spectrum{0.9, 0.4, 0.4});
 
-  // DEBUG(tt.ts(), "\n\n", invtt.ts());
-  // exit(0);
-
   shared_ptr<shape> lc =
       make_shared<sphere>(&tt, &invtt, false, 2, -2, 2, 0, 0, 0);
   shared_ptr<AreaLight> alight = make_shared<AreaLight>(li, lc);
@@ -56,22 +53,6 @@ int main() {
 
   shared_ptr<material> gl =
       make_shared<glass>(spectrum{0.9, 0.9, 0.9}, 1.0, 1.5);
-
-  /* { */
-  /*   pcg32 rng; */
-  /*   SurfaceInteraction ee; */
-  /*   ee.n = {0, 1, 0}; */
-  /*   ee.wo = vec3{0.5, -0.5, 0}.unit(); */
-  /*   auto bsd = gl->get_scatter(ee); */
-  /*   vec3 wi; */
-  /*   double pdf; */
-  /*   bxdf_t abc = BSDF_NONE; */
-  /**/
-  /*   auto f = bsd->sample_f(ee.wo, wi, ee.n, rng, pdf, BSDF_ALL, abc); */
-  /*   DEBUG(ee.n.ts(), " ", ee.wo.ts(), " ", wi.ts(), " ", pdf, " ", f.ts());
-   */
-  /*   exit(1); */
-  /* } */
 
   GeoPrimitive LW{make_shared<sphere>(&left_wall, &left_wall_inv, false, 10000,
                                       0, 0, 0, 0, 0),
@@ -125,13 +106,13 @@ int main() {
   vector<shared_ptr<light>> lights;
   lights.push_back(alight);
 
-  int width = 300;
-  int height = 300;
+  int width = 500;
+  int height = 500;
   film f{width, height};
   scene s{lights, std::make_shared<dumb_aggregate>(world)};
 
   TempCamera cam{f, {0, 0, -3}, {0, 1, 0}, {0, 0, 1}, 1, 0, 90};
-  ProgressiveRenderer renderer(s, cam, 20, 10);
+  ProgressiveRenderer renderer(s, cam, 20, 200);
 
   auto callback = [&](int x) {
     freopen(("nn" + to_string(x) + ".ppm").c_str(), "w", stdout);

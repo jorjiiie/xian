@@ -28,23 +28,14 @@ spectrum direct(const interaction &it, const light &yo, const scene &s,
       spdf = b->pdf(wi, isect.wo, isect.n);  // same here
     }
 
-    // DEBUG("JASKDLJASKLDJAKSLDJASDLKJAKSD");
     if (!tp.isBlack()) {
       double weight = bh(1, lpdf, 1, spdf);
-      /* DEBUG("we have something here", tp.ts(), " ", li.ts(), " ", weight, "
-       * ", */
-      /*       lpdf, " ", spdf); */
       if (v.visible(s)) {
         Ld += tp * li * weight / lpdf;
-        // DEBUG("VISIBLE");
       }
       // else
-
-      // DEBUG("not visible!");
     }
   }
-
-  // DEBUG("light from light sampling,", Ld.ts());
 
   {
     spectrum tp;
@@ -52,7 +43,6 @@ spectrum direct(const interaction &it, const light &yo, const scene &s,
     // shading normals blah blah
     tp = b->sample_f(isect.wo, wi, isect.n, rng, spdf, BSDF_ALL, sampled);
     tp *= std::abs(vec3::dot(wi, isect.n));
-    // DEBUG("stuff ", wi.ts(), " ", spdf);
     if (spdf > 0 && !tp.isBlack()) {
       double weight = 1; // if its specular then its zero D:  need to be able to
                          // test for this
@@ -65,12 +55,10 @@ spectrum direct(const interaction &it, const light &yo, const scene &s,
         weight = bh(1, spdf, 1, lpdf);
       }
 
-      // DEBUG("NONZERO\n");
       ray r{isect.p, wi, 0};
       auto in = s.intersect(r, 0);
       if (in && in->pr->get_area_light() == &yo) {
         // this is the light we want
-        // DEBUG("AJSKDLAJSKLDJASLKDJKLASD");
         Ld += tp * yo.Le(ray{in->p, -wi, 0}) * weight / spdf;
       }
     }
@@ -87,8 +75,6 @@ spectrum sample_light(const interaction &it, const scene &s, RNG &rng) {
   const light &y = *s.lights[sampled];
 
   auto spec = direct(it, y, s, rng) * n;
-
-  //  DEBUG("HIII ", sampled, " ", spec.ts());
 
   return spec;
 }

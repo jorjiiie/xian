@@ -14,10 +14,8 @@ double FrDielectric(double costi, double etaI, double etaT) {
     std::swap(etaI, etaT);
     costi = -costi;
   }
-  DEBUG(enterirg, " ", costi, " ", etaI, " jajaja ", etaT);
   double sini = std::sqrt(max(0.0, 1 - costi * costi));
   double sint = etaI / etaT * sini;
-  DEBUG(sint, , " sini is here");
   if (sint > 1.0)
     return 1;
   double cost = std::sqrt(1.0 - sint * sint);
@@ -30,15 +28,11 @@ double FrDielectric(double costi, double etaI, double etaT) {
 }
 bool refract(const vec3 &wi, const vec3 &n, double eta, vec3 &jaja) {
   double cosi = vec3::dot(wi, n);
-  ASSERT(cosi >= 0, "cosi needs to be nonnegative");
   double sin2i = 1.0 - cosi * cosi;
   double sin2t = eta * eta * sin2i;
-  DEBUG("wi: ", wi.ts(), " ", n.ts(), " ", eta);
   if (sin2t >= 1.0) {
-    DEBUG("total internal refraction?");
     return false;
   }
-  DEBUG("NOT TOTAL INTERNAL REFRACTION ", eta);
   double cost = std::sqrt(1 - sin2t);
   jaja = eta * -wi + (eta * cosi - cost) * n;
   return true;
@@ -99,7 +93,7 @@ vec3 changebasis(
       w.x * i.y + w.y * j.y + w.z * k.y,
       w.x * i.z + w.y * j.z + w.z * k.z,
   };
-  // DEBUG(z.ts(), " what the fuck ", x.ts(), " original: ", w.ts());
+  // (z.ts(), " what the fuck ", x.ts(), " original: ", w.ts());
   return z;
 }
 vec3 cosine_unit(RNG &rng) {
@@ -144,7 +138,7 @@ spectrum specularbtdf::sample_f(const vec3 &wo, vec3 &wi, const vec3 &n, RNG &,
   double etaI = entering ? etaA : etaB;
   double etaT = entering ? etaB : etaA;
   vec3 norm = entering ? n : -n;
-  /* DEBUG("glass2"); */
+  /* ("glass2"); */
   if (!BXDF::refract(wo, norm, etaI / etaT, wi))
     return spectrum{};
   pdf = 1;
@@ -152,29 +146,20 @@ spectrum specularbtdf::sample_f(const vec3 &wo, vec3 &wi, const vec3 &n, RNG &,
   spectrum ft = s * (spectrum{1} - fr.evaluate(vec3::dot(wi, n)));
   // scale for transport from light
 
-  DEBUG("SAMPLING GLASS MATERIAL", ft.ts(), " ", wi.ts(), " ", wo.ts(), " ",
-        n.ts(), " ", s.ts(), " fresnel is ",
-        fr.evaluate(vec3::dot(wi, n)).ts());
   return ft / std::abs(vec3::dot(wi, n));
 }
 
 spectrum specular::sample_f(const vec3 &wo, vec3 &wi, const vec3 &n, RNG &rng,
                             double &pdf) const {
   double F = BXDF::FrDielectric(-vec3::dot(wo, n), etaA, etaB); // flipped LOL
-  DEBUG(F);
-  DEBUG(vec3::dot(wo, n), " why is this entering or whatever");
   if (rng.rfloat() < F) {
-    DEBUG("reflecting");
     vec3 norm = n;
     if (vec3::dot(wo, n) > 0)
       norm = -n;
     wi = wo - 2 * (vec3::dot(wo, norm)) * norm;
     pdf = F;
-    DEBUG(wi.ts());
-    DEBUG(r.ts(), " ", std::abs(vec3::dot(wi, n)), " ", F);
     return r / std::abs(vec3::dot(wi, n)) * F;
   }
-  DEBUG("transmitting");
   // else
   bool entering = vec3::dot(wo, n) < 0;
   double etaI = entering ? etaA : etaB;
@@ -207,8 +192,6 @@ spectrum bsdf::sample_f(const vec3 &wo, vec3 &wi, const vec3 &n, RNG &rng,
   // how to sample multiple bxdfs? random maybe? i dont get the pdf thing though
   if ((bxdfs[0]->t & types) == 0)
     return spectrum{};
-  if (bxdfs[0]->t & BSDF_TRANSMISSION)
-    DEBUG("type is ", sampled, " ", bxdfs[0]->t);
   sampled = bxdf_t(sampled | bxdfs[0]->t);
   return bxdfs[0]->sample_f(wo, wi, n, rng, pdf);
 }
@@ -227,7 +210,6 @@ std::shared_ptr<bsdf> metal::get_scatter(const SurfaceInteraction &si) const {
 
 std::shared_ptr<bsdf> glass::get_scatter(const SurfaceInteraction &si) const {
   auto y = std::make_shared<bsdf>(si, 1);
-  /* DEBUG("HIX?"); */
   y->add(std::make_shared<specular>(s, s, etaA, etaB));
   return y;
 }

@@ -115,14 +115,6 @@ spectrum PathIntegrator::Li(const ray &ra, const scene &s, RNG &rng,
 
     lastSpecular = (sampled & BSDF_SPECULAR) != 0;
 
-    if (lastSpecular && (sampled & BSDF_TRANSMISSION) != 0) {
-
-      DEBUG(wo.ts(), wi.ts(), isect.n.ts(), isect.p.ts(), pdf, " ", i, f.ts(),
-            throughput.ts(), " ", BSDF_ALL, " ", sampled);
-      DEBUG(BSDF_REFLECTION, " ", BSDF_TRANSMISSION, " ", BSDF_DIFFUSE, " ",
-            BSDF_GLOSSY, " ", BSDF_SPECULAR, " ", BSDF_ALL);
-    }
-
     if (f.isBlack() || pdf == 0.0)
       break;
     throughput *= f * std::abs(vec3::dot(isect.n, wi)) / pdf;

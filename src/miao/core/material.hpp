@@ -53,7 +53,6 @@ struct bxdf {
     wi = BXDF::cosine_unit(rng);
     wi = BXDF::changebasis(n, wi);
     if (vec3::dot(wo, n) > 0) {
-      // DEBUG(" supposed to flip?");
       wi = -wi;
     }
     pdf = this->pdf(wi, wo, n);
@@ -61,7 +60,6 @@ struct bxdf {
   }
   virtual double pdf(const vec3 &wi, const vec3 &wo, const vec3 &n) const {
     if (vec3::dot(wi, n) * vec3::dot(wo, n) > 0) {
-      // DEBUG(" flipped oh no");
       return 0;
     }
     return std::abs(vec3::dot(wi, n)) * INV_PI;
