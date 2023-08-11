@@ -32,10 +32,9 @@ void tmp(film::pix &p, int s) {
 
 int main() {
 
-  cout << Transformation::identity.ts() << "\n";
   ifstream str{"models/bunny.obj"};
 
-  Transformation down2 = Transformation::translate({0, -2, -2}) *
+  Transformation down2 = Transformation::translate({2, -3, 0}) *
                          Transformation::scale(2, 2, 2) *
                          Transformation::rotateY(120);
   Transformation up2 = Transformation::translate({0, 2, 0});
@@ -105,7 +104,7 @@ int main() {
 
   vector<GeoPrimitive> tris;
   for (auto &x : mesh.tris) {
-    tris.push_back(GeoPrimitive{x, bs, nullptr});
+    tris.push_back(GeoPrimitive{x, gl, nullptr});
   }
 
   vector<GeoPrimitive> x;
@@ -132,14 +131,14 @@ int main() {
   vector<shared_ptr<light>> lights;
   lights.push_back(alight);
 
-  int width = 500;
-  int height = 500;
+  int width = 400;
+  int height = 200;
   film f{width, height};
-  scene s{lights, std::make_shared<bvh>(world)};
-  // scene s{lights, std::make_shared<dumb_aggregate>(da)};
+  // scene s{lights, std::make_shared<bvh>(world)};
+  scene s{lights, std::make_shared<dumb_aggregate>(da)};
 
   TempCamera cam{f, {0, 0, -8}, {0, 1, 0}, {0, 0, 1}, 1, 0, 90};
-  ProgressiveRenderer renderer(s, cam, 20, 10);
+  ProgressiveRenderer renderer(s, cam, 1, 100);
 
   auto callback = [&](int x) {
     freopen(("nn" + to_string(x) + ".ppm").c_str(), "w", stdout);

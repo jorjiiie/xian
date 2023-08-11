@@ -74,7 +74,7 @@ void SampleIntegrator::render(const scene &s) {
   int ny = (height - 1) / tile_size + 1;
   int cnt = 0;
   std::cerr << std::fixed << std::setprecision(3);
-#pragma omp parallel for collapse(2)
+#pragma omp parallel for schedule(dynamic) collapse(2)
   for (int i = 0; i < nx; i++) {
     for (int j = 0; j < ny; j++) {
       trace(i, j);
@@ -100,12 +100,13 @@ spectrum PathIntegrator::Li(const ray &ra, const scene &s, RNG &rng,
     }
     SurfaceInteraction &isect = *y;
 
-    if (i == 0 || lastSpecular) {
+    if (i == 0 || lastSpecular || render_caustics) {
       const AreaLight *alight = isect.pr->get_area_light();
       if (alight)
         L += throughput * alight->Le(r);
     }
-    L += throughput * sample_light(isect, s, rng);
+    if (!render_caustics && i != 0)
+      L += throughput * sample_light(isect, s, rng);
 
     auto b = isect.pr->get_material()->get_scatter(isect);
     vec3 wo = r.d, wi;
@@ -123,7 +124,7 @@ spectrum PathIntegrator::Li(const ray &ra, const scene &s, RNG &rng,
     r.o = isect.p;
     r.d = wi;
     if (i > 3) {
-      double q = std::max(0.05, 1 - throughput.magnitude());
+      double q = std::max(0.05, 1 - throughput.magnitude() * 0.3333);
       if (rng.rfloat() < q)
         break;
       throughput /= (1 - q);
