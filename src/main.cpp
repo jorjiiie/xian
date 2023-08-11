@@ -21,6 +21,8 @@ using namespace miao;
 
 int64_t cnter_::bbox_tests = 0;
 int64_t cnter_::prim_tests = 0;
+int64_t cnter_::rays_cast = 0;
+int64_t cnter_::good_tests = 0;
 int to_8bit(double d) { return miao::max(miao::min(1.0, d), 0.0) * 255; }
 
 void tmp(film::pix &p, int s) {
@@ -86,8 +88,8 @@ int main() {
   Transformation vertshift = Transformation::translate({-1, 5, 0});
   Transformation ov = Transformation::translate({1, -5, 0});
 
-  Transformation move = Transformation::translate({-1, -2, 1});
-  Transformation back = Transformation::translate({1, 2, -1});
+  Transformation move = Transformation::translate({-2, -3, 3});
+  Transformation back = Transformation::translate({2, 3, -3});
 
   GeoPrimitive jaja{lc, bs, alight};
   GeoPrimitive s2{make_shared<sphere>(&move, &back, false, 1, -1, 1, 0, 0, 0),
@@ -126,24 +128,28 @@ int main() {
   for (auto &z : x) {
     arr.push_back(make_shared<GeoPrimitive>(z));
   }
+
+  std::cerr << "size of input is " << x.size() << "\n";
   bvh world{arr};
 
   vector<shared_ptr<light>> lights;
   lights.push_back(alight);
 
-  int width = 400;
-  int height = 200;
+  int width = 1500;
+  int height = 1500;
   film f{width, height};
-  // scene s{lights, std::make_shared<bvh>(world)};
-  scene s{lights, std::make_shared<dumb_aggregate>(da)};
+  scene s{lights, std::make_shared<bvh>(world)};
+  // scene s{lights, std::make_shared<dumb_aggregate>(da)};
 
   TempCamera cam{f, {0, 0, -8}, {0, 1, 0}, {0, 0, 1}, 1, 0, 90};
-  ProgressiveRenderer renderer(s, cam, 1, 100);
+  ProgressiveRenderer renderer(s, cam, 10, 100);
 
   auto callback = [&](int x) {
     freopen(("nn" + to_string(x) + ".ppm").c_str(), "w", stdout);
-    std::cerr << "bbox tests: " << cnter_::bbox_tests << " "
-              << " primitive tests: " << cnter_::prim_tests << "\n";
+    std::cerr << "bbox tests: " << cnter_::bbox_tests << "\n"
+              << " primitive tests: " << cnter_::prim_tests
+              << "\nrays cast:" << cnter_::rays_cast
+              << "\n prims hit: " << cnter_::good_tests << "\n";
     cout << "P3 " << width << " " << height << "\n255\n";
     for (int i = height - 1; i >= 0; --i) {
       for (int j = 0; j < width; j++) {

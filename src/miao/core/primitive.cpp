@@ -18,6 +18,7 @@ std::optional<SurfaceInteraction> GeoPrimitive::intersect(const ray &r,
   cnter_::prim_tests++;
   if (!s->intersect(r, t, isect))
     return {};
+  cnter_::good_tests++;
   isect.pr = this;
 
   // something about medium blah blah who cares

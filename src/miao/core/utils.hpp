@@ -15,6 +15,8 @@ const double D_INFINITY = std::numeric_limits<double>::max();
 struct cnter_ {
   static int64_t prim_tests;
   static int64_t bbox_tests;
+  static int64_t rays_cast;
+  static int64_t good_tests;
 };
 
 // max of two Ts

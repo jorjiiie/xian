@@ -21,6 +21,7 @@ public:
         std::shared_ptr<aggregate> agg)
       : lights(lights), agg(agg) {}
   std::optional<SurfaceInteraction> intersect(const ray &r, double t) const {
+    cnter_::rays_cast++;
     return agg->intersect(r, t);
   }
 

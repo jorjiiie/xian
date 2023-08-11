@@ -92,21 +92,31 @@ spectrum PathIntegrator::Li(const ray &ra, const scene &s, RNG &rng,
   spectrum L{};
   spectrum throughput{1.0};
   bool lastSpecular = false;
+  bxdf_t flags = BSDF_NONE;
+  bool onoff = false;
+  bool spec = false;
   ray r = ra;
-  for (int i = 0; i < m_depth; i++) {
+  ray arr[10] = {};
+  int i;
+  for (i = 0; i < m_depth; i++) {
     auto y = s.intersect(r, 0);
     if (!y) { // bleak blackness of the screen D:
       break;
     }
     SurfaceInteraction &isect = *y;
 
-    if (i == 0 || lastSpecular || render_caustics) {
+    if (i == 0 || lastSpecular) {
       const AreaLight *alight = isect.pr->get_area_light();
-      if (alight)
+      if (alight) {
         L += throughput * alight->Le(r);
+        // if (onoff)
+        // DEBUG("hit light after! THIS IS A L(DS)*SDE PATH", throughput.ts());
+      }
     }
-    if (!render_caustics && i != 0)
+    if (i != 0) {
       L += throughput * sample_light(isect, s, rng);
+      DEBUG("FRA\n");
+    }
 
     auto b = isect.pr->get_material()->get_scatter(isect);
     vec3 wo = r.d, wi;
@@ -114,20 +124,42 @@ spectrum PathIntegrator::Li(const ray &ra, const scene &s, RNG &rng,
     bxdf_t sampled = BSDF_NONE;
     spectrum f = b->sample_f(wo, wi, isect.n, rng, pdf, BSDF_ALL, sampled);
 
+    if ((flags & BSDF_DIFFUSE) != 0 && (sampled & BSDF_TRANSMISSION) != 0) {
+      // DEBUG("THING AFTER DIFFUSE");
+      onoff = true;
+    }
+    flags = sampled;
+    if (onoff) {
+      // DEBUG(isect.p.ts(), wo.ts(), wi.ts(), pdf, throughput.ts(), L.ts(), "
+      // ",
+      //  ",
+      //      i);
+    }
+    if ((BSDF_TRANSMISSION & sampled) != 0)
+      spec = true;
+
     lastSpecular = (sampled & BSDF_SPECULAR) != 0;
 
     if (f.isBlack() || pdf == 0.0)
       break;
     throughput *= f * std::abs(vec3::dot(isect.n, wi)) / pdf;
 
+    arr[i] = r;
     // std::cerr << "hi " << i << "bounce yee haw\n";
     r.o = isect.p;
     r.d = wi;
+    // r.o += r.d * vec3::eps * vec3::eps;
     if (i > 3) {
       double q = std::max(0.05, 1 - throughput.magnitude() * 0.3333);
       if (rng.rfloat() < q)
         break;
       throughput /= (1 - q);
+    }
+  }
+  if (spec) {
+    DEBUG("SPECULAR PATH!");
+    for (int j = 0; j < i; j++) {
+      DEBUG(arr[j].o.ts(), arr[j].d.ts());
     }
   }
   return L;

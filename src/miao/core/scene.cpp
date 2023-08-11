@@ -6,6 +6,8 @@ bool visibility::visible(const scene &s) const {
   double maxt = d.magnitude();
   ray r{p0.p + (d / maxt * EPS), d / maxt, 0};
 
+  cnter_::rays_cast++;
+
   auto y = s.intersect(r, 0);
   if (y) {
     return !(y->t + EPS < maxt);

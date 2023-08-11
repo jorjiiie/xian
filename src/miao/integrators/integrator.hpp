@@ -37,7 +37,6 @@ protected:
 
 class PathIntegrator : public SampleIntegrator {
 public:
-  const bool render_caustics = false;
   const int m_depth = 10;
   PathIntegrator(camera *cam, int samples = 32)
       : SampleIntegrator(cam, samples) {}
