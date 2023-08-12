@@ -53,7 +53,8 @@ spectrum VolumeIntegrator::Li(const ray &rx, const scene &s, RNG &rng,
       // must modify sample_light to account for media
       L += tp * sample_light(mi, s, rng);
       // sample the phase function here
-      // update the ray
+      // update the ray (don't do this in heterogeneous media or non const phase
+      // functions LOL)
       mi.ph->sample_p(r.d, r.d, rng);
 
       DEBUG("what is going on");

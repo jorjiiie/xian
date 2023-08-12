@@ -93,6 +93,9 @@ struct vec3 {
   static double dot(const vec3 &a, const vec3 &b) {
     return a.x * b.x + a.y * b.y + a.z * b.z;
   }
+  static double dist(const vec3 &a, const vec3 &b) {
+    return (a - b).magnitude();
+  }
   static vec3 cross(const vec3 &a, const vec3 &b) {
     return vec3(a.y * b.z - a.z * b.y, b.x * a.z - a.x * b.z,
                 a.x * b.y - a.y * b.x);

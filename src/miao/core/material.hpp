@@ -183,6 +183,13 @@ public:
   spectrum f(const vec3 &wi, const vec3 &wo, bxdf_t types) const;
   virtual spectrum sample_f(const vec3 &wo, vec3 &wi, const vec3 &n, RNG &rng,
                             double &pdf, bxdf_t types, bxdf_t &sampled) const;
+  bxdf_t get_flags() const {
+    bxdf_t flags = BSDF_NONE;
+    for (int i = 0; i < nb; i++) {
+      flags = bxdf_t(flags | bxdfs[i]->t);
+    }
+    return flags;
+  }
   double pdf(const vec3 &wi, const vec3 &wo, const vec3 &n,
              bxdf_t types = BSDF_ALL) const {
     double tot = 0;

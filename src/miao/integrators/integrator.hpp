@@ -17,6 +17,7 @@ class interaction;
 
 class integrator {
 public:
+  virtual void preprocess(const scene &s) {}
   virtual void render(const scene &) = 0;
 };
 
