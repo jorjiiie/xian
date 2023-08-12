@@ -13,6 +13,7 @@ set(CAMERA_SOURCES
 
 set(INTEGRATOR_SOURCES
   integrators/common.cpp
+  integrators/volumeintegrator.cpp
   integrators/integrator.cpp)
 
 set(LIGHT_SOURCES
@@ -26,6 +27,9 @@ set(RENDERER_SOURCES
 set(DS_SOURCES
   ds/bvh.cpp)
 
+set(VOLUME_SOURCES
+  volumes/medium.cpp)
+ 
 add_library(miao STATIC
   ${CORE_SOURCES}
   ${CAMERA_SOURCES}
@@ -34,4 +38,5 @@ add_library(miao STATIC
   ${MATERIAL_SOURCES}
   ${RENDERER_SOURCES}
   ${DS_SOURCES}
+  ${VOLUME_SOURCES}
   )

@@ -6,6 +6,7 @@
 #include <memory>
 
 #include "miao/integrators/integrator.hpp"
+#include "miao/integrators/volumeintegrator.hpp"
 namespace miao {
 
 class scene;
@@ -14,7 +15,7 @@ class ProgressiveRenderer {
 
 public:
   ProgressiveRenderer(scene &s, camera &cam, int epochs, int spe = 16)
-      : s(s), cam(cam), leunuchs(std::make_shared<PathIntegrator>(&cam, spe)),
+      : s(s), cam(cam), leunuchs(std::make_shared<VolumeIntegrator>(&cam, spe)),
         epochs(epochs), spe(spe) {}
   void render(const std::function<void(int)> &callback);
 

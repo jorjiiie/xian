@@ -10,6 +10,7 @@
 namespace miao {
 template <int n> class BaseSpectrum {
 public:
+  static const int N = n;
   BaseSpectrum(double v = 0.0) {
     for (int i = 0; i < n; i++)
       c[i] = v;
@@ -129,6 +130,13 @@ public:
     }
     r += "]";
     return r;
+  }
+
+  BaseSpectrum exp() const {
+    BaseSpectrum<N> ret;
+    for (int i = 0; i < n; i++)
+      ret.c[i] = std::exp(c[i]);
+    return ret;
   }
 
   static const int nSamples = n;

@@ -142,7 +142,7 @@ TriangleMesh::TriangleMesh(const Transformation *otw, const Transformation *wto,
     vec = (*otw)(vec, true); // these are points
 
   for (vec3 &vec : n)
-    vec = (*otw)(vec).unit();
+    vec = (*otw)(vec, 1); // normals
 
   for (auto &z : faces) {
     tris.push_back(std::make_shared<triangle>(this, z));

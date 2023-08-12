@@ -21,6 +21,11 @@ std::optional<SurfaceInteraction> GeoPrimitive::intersect(const ray &r,
   cnter_::good_tests++;
   isect.pr = this;
 
+  if (mi.transition()) {
+    isect.mi = mi;
+  } else {
+    isect.mi = MediumInterface(mi.in);
+  }
   // something about medium blah blah who cares
   return isect;
 }

@@ -16,6 +16,7 @@ double TempCamera::gen_ray(int x, int y, RNG &rng, ray &r) const {
               (up * (y + rng.rfloat()) * d_v) - offset;
 
   r = ray{this->pos + offset, look.unit(), 0};
+  r.m = med;
   return 1;
 }
 

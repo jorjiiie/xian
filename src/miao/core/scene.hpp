@@ -24,6 +24,8 @@ public:
     cnter_::rays_cast++;
     return agg->intersect(r, t);
   }
+  std::optional<SurfaceInteraction> intersectTr(const ray &r, double t,
+                                                spectrum &tr, RNG &rng) const;
 
   std::vector<std::shared_ptr<light>> lights;
   std::shared_ptr<aggregate> agg;
@@ -35,6 +37,8 @@ public:
   visibility(const interaction &p0_, const interaction &p1_)
       : p0(p0_), p1(p1_) {}
   bool visible(const scene &s) const;
+  // calculates throughput (generalization of visibile)
+  spectrum tr(const scene &s, RNG &rng) const;
   interaction p0, p1;
 };
 

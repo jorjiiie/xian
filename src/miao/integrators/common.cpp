@@ -7,6 +7,9 @@
 #include "miao/core/shape.hpp"
 #include "miao/lights/light.hpp"
 
+#include "miao/volumes/base.hpp"
+#include "miao/volumes/medium.hpp"
+
 namespace miao {
 spectrum direct(const interaction &it, const light &yo, const scene &s,
                 RNG &rng) {
@@ -18,22 +21,29 @@ spectrum direct(const interaction &it, const light &yo, const scene &s,
   spectrum li = yo.Li(it, rng, wi, lpdf, &v);
   // test visibility
   bxdf_t sampled;
-  auto b = isect.pr->get_material()->get_scatter(isect);
   if (lpdf > 0 && !li.isBlack()) {
 
     spectrum tp{1.0};
     if (it.isSurfaceInteraction()) {
+      auto b = isect.pr->get_material()->get_scatter(isect);
+
       tp = b->f(wi, isect.wo, BSDF_ALL) *
            std::abs(vec3::dot(wi, isect.n)); // should be isect.sn but oh well
       spdf = b->pdf(wi, isect.wo, isect.n);  // same here
+    } else {
+      const MediumInteraction &mi = (const MediumInteraction &)it;
+
+      spdf = mi.ph->sample_p(mi.wo, wi, rng);
+
+      tp = spectrum{spdf};
     }
 
     if (!tp.isBlack()) {
       double weight = bh(1, lpdf, 1, spdf);
+      tp *= v.tr(s, rng);
       if (v.visible(s)) {
         Ld += tp * li * weight / lpdf;
       }
-      // else
     }
   }
 
@@ -41,8 +51,17 @@ spectrum direct(const interaction &it, const light &yo, const scene &s,
     spectrum tp;
     sampled = BSDF_NONE;
     // shading normals blah blah
-    tp = b->sample_f(isect.wo, wi, isect.n, rng, spdf, BSDF_ALL, sampled);
-    tp *= std::abs(vec3::dot(wi, isect.n));
+    if (it.isSurfaceInteraction()) {
+      auto b = isect.pr->get_material()->get_scatter(isect);
+      tp = b->sample_f(isect.wo, wi, isect.n, rng, spdf, BSDF_ALL, sampled);
+      tp *= std::abs(vec3::dot(wi, isect.n));
+    } else {
+      const MediumInteraction &mi = (const MediumInteraction &)it;
+      // i don't understand this part but ok
+      spdf = mi.ph->sample_p(mi.wo, wi, rng);
+
+      tp = spectrum{spdf};
+    }
     if (spdf > 0 && !tp.isBlack()) {
       double weight = 1; // if its specular then its zero D:  need to be able to
                          // test for this
@@ -56,7 +75,9 @@ spectrum direct(const interaction &it, const light &yo, const scene &s,
       }
 
       ray r{isect.p, wi, 0};
-      auto in = s.intersect(r, 0);
+      // auto in = s.intersect(r, 0);
+      auto in = s.intersectTr(r, 0, tp, rng);
+
       if (in && in->pr->get_area_light() == &yo) {
         // this is the light we want
         Ld += tp * yo.Le(ray{in->p, -wi, 0}) * weight / spdf;

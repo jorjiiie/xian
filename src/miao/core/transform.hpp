@@ -108,6 +108,15 @@ public:
     return vec3{xp, yp, zp};
   }
 
+  // int for normals xd
+  vec3 operator()(const vec3 &n, int N) const {
+    // apply to normal
+    double x = n.x, y = n.y, z = n.z;
+    return vec3{m_inv.m[0][0] * x + m_inv.m[1][0] * y + m_inv.m[2][0] * z,
+                m_inv.m[0][1] * x + m_inv.m[1][1] * y + m_inv.m[2][1] * z,
+                m_inv.m[0][2] * x + m_inv.m[1][2] * y + m_inv.m[2][2] * z};
+  }
+
   // remember that the normal is transformed by the inverse transpose! i'm not
   // implementing that though since i don't have normals lol
 

@@ -9,6 +9,8 @@
 #include "miao/core/BBox.hpp"
 #include "miao/core/interaction.hpp"
 
+#include "miao/volumes/medium.hpp"
+
 namespace miao {
 
 class AreaLight;
@@ -30,8 +32,8 @@ class GeoPrimitive : public primitive {
 public:
   GeoPrimitive(const std::shared_ptr<shape> &s_,
                const std::shared_ptr<material> &mat_,
-               const std::shared_ptr<AreaLight> &light_)
-      : s(s_), mat(mat_), areaLight(light_) {}
+               const std::shared_ptr<AreaLight> &light_, MediumInterface m = {})
+      : s(s_), mat(mat_), areaLight(light_), mi(m) {}
   virtual const AreaLight *get_area_light() const override {
     return areaLight.get();
   }
@@ -44,6 +46,7 @@ private:
   std::shared_ptr<shape> s;
   std::shared_ptr<material> mat;
   std::shared_ptr<AreaLight> areaLight;
+  MediumInterface mi;
   // medium interface here (but ignoring for now)
 };
 

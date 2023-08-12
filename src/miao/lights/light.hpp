@@ -20,6 +20,8 @@ public:
 
   virtual double pdf_li(const interaction &si, const vec3 &wi) const = 0;
   virtual spectrum power() const = 0;
+  // for leaving the light
+  const medium *m;
 };
 
 class AreaLight : public light {

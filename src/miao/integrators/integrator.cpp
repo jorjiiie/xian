@@ -92,11 +92,7 @@ spectrum PathIntegrator::Li(const ray &ra, const scene &s, RNG &rng,
   spectrum L{};
   spectrum throughput{1.0};
   bool lastSpecular = false;
-  bxdf_t flags = BSDF_NONE;
-  bool onoff = false;
-  bool spec = false;
   ray r = ra;
-  ray arr[10] = {};
   int i;
   for (i = 0; i < m_depth; i++) {
     auto y = s.intersect(r, 0);
@@ -118,25 +114,18 @@ spectrum PathIntegrator::Li(const ray &ra, const scene &s, RNG &rng,
       DEBUG("FRA\n");
     }
 
-    auto b = isect.pr->get_material()->get_scatter(isect);
+    auto mat = isect.pr->get_material();
+    if (mat == nullptr) {
+      i--;
+      r.o = isect.p;
+      continue;
+    }
+
+    auto b = mat->get_scatter(isect);
     vec3 wo = r.d, wi;
     double pdf;
     bxdf_t sampled = BSDF_NONE;
     spectrum f = b->sample_f(wo, wi, isect.n, rng, pdf, BSDF_ALL, sampled);
-
-    if ((flags & BSDF_DIFFUSE) != 0 && (sampled & BSDF_TRANSMISSION) != 0) {
-      // DEBUG("THING AFTER DIFFUSE");
-      onoff = true;
-    }
-    flags = sampled;
-    if (onoff) {
-      // DEBUG(isect.p.ts(), wo.ts(), wi.ts(), pdf, throughput.ts(), L.ts(), "
-      // ",
-      //  ",
-      //      i);
-    }
-    if ((BSDF_TRANSMISSION & sampled) != 0)
-      spec = true;
 
     lastSpecular = (sampled & BSDF_SPECULAR) != 0;
 
@@ -144,22 +133,13 @@ spectrum PathIntegrator::Li(const ray &ra, const scene &s, RNG &rng,
       break;
     throughput *= f * std::abs(vec3::dot(isect.n, wi)) / pdf;
 
-    arr[i] = r;
-    // std::cerr << "hi " << i << "bounce yee haw\n";
     r.o = isect.p;
     r.d = wi;
-    // r.o += r.d * vec3::eps * vec3::eps;
     if (i > 3) {
       double q = std::max(0.05, 1 - throughput.magnitude() * 0.3333);
       if (rng.rfloat() < q)
         break;
       throughput /= (1 - q);
-    }
-  }
-  if (spec) {
-    DEBUG("SPECULAR PATH!");
-    for (int j = 0; j < i; j++) {
-      DEBUG(arr[j].o.ts(), arr[j].d.ts());
     }
   }
   return L;

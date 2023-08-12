@@ -9,6 +9,7 @@
 #include "miao/ds/bvh.hpp"
 #include "miao/lights/light.hpp"
 #include "miao/renderers/progressive.hpp"
+#include "miao/volumes/medium.hpp"
 
 #include "miao/core/debug.hpp"
 
@@ -36,15 +37,18 @@ int main() {
 
   ifstream str{"models/bunny.obj"};
 
-  Transformation down2 = Transformation::translate({2, -3, 0}) *
+  Transformation down2 = Transformation::translate({2, 2.5, 0}) *
                          Transformation::scale(2, 2, 2) *
-                         Transformation::rotateY(120);
+                         Transformation::rotateY(120 + 90);
   Transformation up2 = Transformation::translate({0, 2, 0});
   TriangleMesh mesh = TriangleMesh::read_obj(str, &down2, &up2);
   Transformation id{};
-  spectrum li{1.5, 1.5, 1.5};
+  spectrum li{1, 1, 1};
 
-  vec3 dD{1, 1, 0};
+  vec3 dD{0, 4, 0};
+  homogeneous med{spectrum{0.03, 0.03, 0.03}, spectrum{0.05, 0.05, 0.05}, 0};
+  MediumInterface emptyin{nullptr, &med};
+  MediumInterface emptyout{&med, nullptr};
   Transformation tt = Transformation::translate(dD);
   Transformation invtt = Transformation::translate(-dD);
   Transformation left_wall = Transformation::translate(vec3{10005, 0, 0});
@@ -59,7 +63,7 @@ int main() {
   shared_ptr<material> red_wall = make_shared<lambert>(spectrum{0.9, 0.4, 0.4});
 
   shared_ptr<shape> lc =
-      make_shared<sphere>(&tt, &invtt, false, 2, -2, 2, 0, 0, 0);
+      make_shared<sphere>(&tt, &invtt, false, 1, -2, 2, 0, 0, 0);
 
   shared_ptr<AreaLight> alight = make_shared<AreaLight>(li, lc);
 
@@ -88,16 +92,14 @@ int main() {
   Transformation vertshift = Transformation::translate({-1, 5, 0});
   Transformation ov = Transformation::translate({1, -5, 0});
 
-  Transformation move = Transformation::translate({-2, -3, 3});
-  Transformation back = Transformation::translate({2, 3, -3});
+  Transformation move = Transformation::translate({-1.2, 2, -.3});
+  Transformation back = Transformation::translate({1.2, -2, .3});
 
   GeoPrimitive jaja{lc, bs, alight};
   GeoPrimitive s2{make_shared<sphere>(&move, &back, false, 1, -1, 1, 0, 0, 0),
-                  gl, nullptr};
+                  gl, nullptr, emptyin};
+
   // make_shared<lambert>(spectrum{.2, .7, .8}), nullptr};
-  GeoPrimitive s3{
-      make_shared<sphere>(&vertshift, &ov, false, 3, -3, 3, 0, 0, 0), spec,
-      nullptr};
   GeoPrimitive s4{
       make_shared<sphere>(&ov, &vertshift, false, 3, -3, 3, 0, 0, 0),
       make_shared<lambert>(spectrum{0.9, 0.5, 0.5}), nullptr};
@@ -106,20 +108,17 @@ int main() {
 
   vector<GeoPrimitive> tris;
   for (auto &x : mesh.tris) {
-    tris.push_back(GeoPrimitive{x, gl, nullptr});
+    tris.push_back(GeoPrimitive{x, gl, nullptr, emptyin});
   }
 
   vector<GeoPrimitive> x;
   x.push_back(jaja);
   x.push_back(s2);
-  x.push_back(s3);
-  // x.push_back(s4);
-  //  x.push_back(s5);
-  x.push_back(LW);
-  x.push_back(RW);
-  x.push_back(CEIL);
-  x.push_back(FLOOR);
-  x.push_back(BACK_WALL);
+  /* x.push_back(LW); */
+  /* x.push_back(RW); */
+  /* x.push_back(CEIL); */
+  /* x.push_back(FLOOR); */
+  /* x.push_back(BACK_WALL); */
   for (auto &y : tris) {
     x.push_back(y);
   }
@@ -135,14 +134,15 @@ int main() {
   vector<shared_ptr<light>> lights;
   lights.push_back(alight);
 
-  int width = 1500;
-  int height = 1500;
+  int width = 300;
+  int height = 300;
   film f{width, height};
   scene s{lights, std::make_shared<bvh>(world)};
   // scene s{lights, std::make_shared<dumb_aggregate>(da)};
 
   TempCamera cam{f, {0, 0, -8}, {0, 1, 0}, {0, 0, 1}, 1, 0, 90};
-  ProgressiveRenderer renderer(s, cam, 10, 100);
+  cam.med = &med;
+  ProgressiveRenderer renderer(s, cam, 30, 200);
 
   auto callback = [&](int x) {
     freopen(("nn" + to_string(x) + ".ppm").c_str(), "w", stdout);

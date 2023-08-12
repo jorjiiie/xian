@@ -18,6 +18,8 @@ public:
   const Transformation &ctw;
   film &f;
   double t0, t1;
+  // for leaving the camera
+  const medium *med = nullptr;
 };
 
 class ProjectionCamera : public camera {

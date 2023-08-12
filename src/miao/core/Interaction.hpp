@@ -2,22 +2,28 @@
 #ifndef INTERACTION_HPP
 #define INTERACTION_HPP
 
-#include "ray.hpp"
-#include "utils.hpp"
-#include "vec3.hpp"
+#include "miao/core/ray.hpp"
+#include "miao/core/utils.hpp"
+#include "miao/core/vec3.hpp"
+
+#include "miao/volumes/medium.hpp"
+
+#include <memory>
 
 namespace miao {
-class MediumInterface;
 class shape;
 class primitive;
 class bsdf;
+class MediumInterface;
+class PhaseFunction;
 
 struct interaction {
   interaction() : t(0) {}
   interaction(const point3 &p, const vec3 &n, const vec3 &wo, double t,
-              const MediumInterface *m)
+              const MediumInterface m)
       : p(p), n(n), wo(wo), t(t), mi(m) {}
   bool isSurfaceInteraction() const { return n != vec3{}; }
+  bool isMediumInteraction() const { return !isSurfaceInteraction(); }
 
   // we ignore the medium for now
   ray spawnRay(const vec3 &d) const {
@@ -33,11 +39,18 @@ struct interaction {
     vec3 d = p2 - p1;
     return ray{p1, d, 0, 1 - EPS, t};
   }
+  const medium *get_medium(const vec3 &wo) const {
+    if (vec3::dot(wo, n) > 0) {
+      // outside
+      return mi.out;
+    }
+    return mi.in;
+  }
   point3 p;
   vec3 wo;
   vec3 n;
   double t;
-  const MediumInterface *mi;
+  MediumInterface mi;
 };
 
 // this does not have differential geometry since i don't particularly care
@@ -45,7 +58,7 @@ struct interaction {
 struct SurfaceInteraction : public interaction {
   SurfaceInteraction() {}
   SurfaceInteraction(const point3 &p, const vec3 &n, const vec3 &wo, double t,
-                     const MediumInterface *m, const vec3 &sn_, double u_,
+                     const MediumInterface m, const vec3 &sn_, double u_,
                      double v_)
       : interaction(p, n, wo, t, m), sn(sn_), u(u_), v(v_) {}
   bsdf *get_bsdf(const ray &r);
@@ -55,6 +68,10 @@ struct SurfaceInteraction : public interaction {
   // probably want a unique ptr here lol
   bsdf *b = nullptr;
 };
-class MediumInteraction : public interaction {};
+class MediumInteraction : public interaction {
+public:
+  PhaseFunction *get_phase(const ray &r);
+  std::shared_ptr<PhaseFunction> ph;
+};
 } // namespace miao
 #endif // interaction_hpp
