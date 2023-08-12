@@ -45,7 +45,7 @@ int main() {
   Transformation id{};
   spectrum li{1, 1, 1};
 
-  vec3 dD{0, 4, 0};
+  vec3 dD{0, 10, 0};
   homogeneous med{spectrum{0.03, 0.03, 0.03}, spectrum{0.05, 0.05, 0.05}, 0};
   MediumInterface emptyin{nullptr, &med};
   MediumInterface emptyout{&med, nullptr};
@@ -61,6 +61,8 @@ int main() {
   shared_ptr<material> green_wall =
       make_shared<lambert>(spectrum{0.3, 0.9, 0.5});
   shared_ptr<material> red_wall = make_shared<lambert>(spectrum{0.9, 0.4, 0.4});
+
+  shared_ptr<material> met = make_shared<metal>(spectrum{1.0});
 
   shared_ptr<shape> lc =
       make_shared<sphere>(&tt, &invtt, false, 1, -2, 2, 0, 0, 0);
@@ -108,7 +110,7 @@ int main() {
 
   vector<GeoPrimitive> tris;
   for (auto &x : mesh.tris) {
-    tris.push_back(GeoPrimitive{x, gl, nullptr, emptyin});
+    tris.push_back(GeoPrimitive{x, red_wall, nullptr, emptyin});
   }
 
   vector<GeoPrimitive> x;
@@ -134,15 +136,15 @@ int main() {
   vector<shared_ptr<light>> lights;
   lights.push_back(alight);
 
-  int width = 300;
-  int height = 300;
+  int width = 1500;
+  int height = 1500;
   film f{width, height};
   scene s{lights, std::make_shared<bvh>(world)};
   // scene s{lights, std::make_shared<dumb_aggregate>(da)};
 
   TempCamera cam{f, {0, 0, -8}, {0, 1, 0}, {0, 0, 1}, 1, 0, 90};
   cam.med = &med;
-  ProgressiveRenderer renderer(s, cam, 30, 200);
+  ProgressiveRenderer renderer(s, cam, 30, 2000);
 
   auto callback = [&](int x) {
     freopen(("nn" + to_string(x) + ".ppm").c_str(), "w", stdout);
