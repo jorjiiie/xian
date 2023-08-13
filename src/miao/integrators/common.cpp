@@ -29,7 +29,8 @@ spectrum direct(const interaction &it, const light &yo, const scene &s,
 
       tp = b->f(wi, isect.wo, BSDF_ALL) *
            std::abs(vec3::dot(wi, isect.n)); // should be isect.sn but oh well
-      spdf = b->pdf(wi, isect.wo, isect.n);  // same here
+      DEBUG("tp is ", tp.ts());
+      spdf = b->pdf(wi, isect.wo, isect.n); // same here
     } else {
       const MediumInteraction &mi = (const MediumInteraction &)it;
 
@@ -41,11 +42,13 @@ spectrum direct(const interaction &it, const light &yo, const scene &s,
     if (!tp.isBlack()) {
       double weight = bh(1, lpdf, 1, spdf);
       tp *= v.tr(s, rng);
-      if (v.visible(s)) {
+      if (!tp.isBlack()) {
         Ld += tp * li * weight / lpdf;
       }
     }
   }
+  if (!Ld.isBlack())
+    DEBUG("what the fuck ", Ld.ts());
 
   {
     spectrum tp;
@@ -63,6 +66,7 @@ spectrum direct(const interaction &it, const light &yo, const scene &s,
       tp = spectrum{spdf};
     }
     if (spdf > 0 && !tp.isBlack()) {
+
       double weight = 1; // if its specular then its zero D:  need to be able to
                          // test for this
       // check light pdf
@@ -85,6 +89,8 @@ spectrum direct(const interaction &it, const light &yo, const scene &s,
     }
   }
 
+  if (!Ld.isBlack())
+    DEBUG(Ld.ts(), " no fucking way");
   return Ld;
 }
 

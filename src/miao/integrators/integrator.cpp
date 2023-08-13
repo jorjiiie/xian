@@ -112,9 +112,9 @@ spectrum PathIntegrator::Li(const ray &ra, const scene &s, RNG &rng,
         // DEBUG("hit light after! THIS IS A L(DS)*SDE PATH", throughput.ts());
       }
     }
-    if (i != 0) {
+    if (i == 0) {
       L += throughput * sample_light(isect, s, rng);
-      DEBUG("FRA\n");
+      break;
     }
 
     auto mat = isect.pr->get_material();

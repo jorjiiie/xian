@@ -26,10 +26,11 @@ spectrum AreaLight::sample(ray &r, RNG &rng, double &pdf) const {
   // random in sphere? nah cosine weighted but two sided?
   vec3 wi = BXDF::cosine_unit(rng);
   BXDF::changebasis(it.n, wi);
-  if (rng.rint() & 1)
-    wi = -wi;
-  pdf = std::abs(vec3::dot(it.n, wi)) / 2 / base->area();
-  r = ray{it.p, wi, 0};
+
+  // note that we only emit from one side here - make sure you don't emit to
+  // other side then
+  pdf = std::abs(vec3::dot(it.n, wi)) / base->area();
+  r = ray{it.p + wi * vec3::eps * vec3::eps, wi, 0};
   r.m = m;
 
   return Le(r) * std::abs(vec3::dot(it.n, wi));

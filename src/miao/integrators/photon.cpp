@@ -46,7 +46,8 @@ void PhotonIntegrator::preprocess(const scene &s) {
   DEBUG("CURRENTLY SHOOTING PHOTONS");
   int num_shooters = 1;
 #ifdef _OPENMP
-  num_shooters = omp_get_num_threads();
+  num_shooters = omp_get_max_threads();
+  omp_set_num_threads(num_shooters);
 #endif
 
   std::vector<double> light_powers;
@@ -60,15 +61,20 @@ void PhotonIntegrator::preprocess(const scene &s) {
     rngs[i].seed(rand() * rand());
   }
 
-  int current_photons = 0;
+  int vol_photons = 0, s_photons = 0;
   auto shoot = [&]() {
     int idx = 0;
+    int to_shoot = num_photons / num_shooters;
 #ifdef _OPENMP
     idx = omp_get_thread_num();
+
+    if (to_shoot + 1 == num_shooters) {
+      // must do the remainder as well!
+      to_shoot += num_photons % num_shooters;
+    }
 #endif
     RNG &rng = rngs[idx];
-
-    while (current_photons < num_photons) {
+    for (int shot = 0; shot < to_shoot; shot++) {
       // sample the scene lights;
       ray r;
 
@@ -100,7 +106,7 @@ void PhotonIntegrator::preprocess(const scene &s) {
             cell c = get_cell(mi.p);
 #pragma omp critical
             {
-              current_photons++;
+              ++vol_photons;
               // this needs to account for the fraction that gets boosted?
               // sigma_s
               vpm[c].push_back(Photon{mi.p, mi.wo, tp});
@@ -123,18 +129,18 @@ void PhotonIntegrator::preprocess(const scene &s) {
             continue;
           }
           auto b = mat->get_scatter(isect);
+
           if ((b->get_flags() & BSDF_DIFFUSE) != 0 && interacted) {
             // deposit a photon here!
             cell c = get_cell(isect.p);
 #pragma omp critical
             {
-              current_photons++;
               spm[c].push_back({Photon{isect.p, isect.wo, tp}});
-
+              ++s_photons;
               if (isect.p[1] < 6)
                 DEBUG("DEPOSITING A SURFACE PHOTON WITH TP", tp.ts(),
                       " at cell ", c.i, ' ', c.j, ' ', c.k, " with point ",
-                      isect.p.ts(), r.o.ts(), r.d.ts());
+                      isect.p.ts(), r.o.ts(), r.d.ts(), mat);
             }
           }
           interacted = true;
@@ -168,7 +174,7 @@ void PhotonIntegrator::preprocess(const scene &s) {
   for (int i = 0; i < num_shooters; i++)
     shoot();
 
-  DEBUG("DONE SHOOTING PHOTONS", current_photons);
+  DEBUG("DONE SHOOTING PHOTONS ", vol_photons, " ", s_photons);
   std::cerr << "done shooting photons, statistics is " << good_photons << " "
             << tot_photons << " for " << good_photons * 1.0 / tot_photons << " "
             << vpm.size() << " " << spm.size() << "\n";
@@ -212,7 +218,7 @@ spectrum PhotonIntegrator::estimate(
     }
   }
   DEBUG(n_phots, " ", L.ts());
-  return L / inv_photons / (n_phots + 1) / 10;
+  return L;
 }
 
 spectrum
