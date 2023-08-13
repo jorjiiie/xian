@@ -5,6 +5,7 @@ set(CORE_SOURCES
   core/primitive.cpp
   core/scene.cpp
   core/transform.cpp
+  core/distribution.cpp
   core/shape.cpp)
 
 set(CAMERA_SOURCES
@@ -14,7 +15,8 @@ set(CAMERA_SOURCES
 set(INTEGRATOR_SOURCES
   integrators/common.cpp
   integrators/volumeintegrator.cpp
-  integrators/integrator.cpp)
+  integrators/integrator.cpp
+  integrators/photon.cpp)
 
 set(LIGHT_SOURCES
   lights/light.cpp)

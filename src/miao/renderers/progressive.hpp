@@ -11,18 +11,26 @@ namespace miao {
 
 class scene;
 class camera;
-class ProgressiveRenderer {
+
+template <typename Integrator> class ProgressiveRenderer {
 
 public:
   ProgressiveRenderer(scene &s, camera &cam, int epochs, int spe = 16)
-      : s(s), cam(cam), leunuchs(std::make_shared<VolumeIntegrator>(&cam, spe)),
+      : s(s), cam(cam), leunuchs(std::make_shared<Integrator>(&cam, spe)),
         epochs(epochs), spe(spe) {}
-  void render(const std::function<void(int)> &callback);
+  void render(const std::function<void(int)> &callback) {
+
+    for (int i = 0; i < epochs; i++) {
+      std::cerr << "currently rendering epoch " << (i + 1) << "\n";
+      leunuchs->render(s);
+      callback(i);
+    }
+  }
 
 private:
   scene &s;
   camera &cam;
-  std::shared_ptr<integrator> leunuchs;
+  std::shared_ptr<Integrator> leunuchs;
   int epochs;
   int spe;
 };

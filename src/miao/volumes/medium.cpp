@@ -13,7 +13,6 @@ spectrum homogeneous::sample(const ray &r, RNG &rng,
   int id = rng.rint() % spectrum::N;
   double t = -std::log(1 - rng.rfloat()) / st[id];
 
-  DEBUG("uwu\n");
   bool media = t < r.maxt;
   if (t < r.maxt) {
     // init phase function, mi is valid
@@ -21,9 +20,7 @@ spectrum homogeneous::sample(const ray &r, RNG &rng,
     mi.wo = r.d;
     mi.t = t;
     mi.ph = std::make_shared<isotropic>();
-    DEBUG("HIT SOMETHING IN MEDIA");
   } else {
-    DEBUG("oh noes!");
   }
   spectrum tr = homogeneous::tr(r, std::min(t, D_INFINITY - 1), rng);
   spectrum pdf_component = media ? (st * tr) : tr;

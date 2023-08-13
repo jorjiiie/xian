@@ -1,5 +1,6 @@
 #include "miao/lights/light.hpp"
 
+#include "miao/core/material.hpp"
 #include "miao/core/scene.hpp"
 #include "miao/core/shape.hpp"
 
@@ -17,5 +18,20 @@ spectrum AreaLight::Li(const interaction &si, RNG &rng, vec3 &wi, double &pdf,
 spectrum AreaLight::power() const { return emit * area * PI; }
 double AreaLight::pdf_li(const interaction &si, const vec3 &wi) const {
   return this->base->pdf(si, wi);
+}
+
+spectrum AreaLight::sample(ray &r, RNG &rng, double &pdf) const {
+  interaction it = this->base->sample(rng);
+  // for now i guess we just sample everywhere lmfao
+  // random in sphere? nah cosine weighted but two sided?
+  vec3 wi = BXDF::cosine_unit(rng);
+  BXDF::changebasis(it.n, wi);
+  if (rng.rint() & 1)
+    wi = -wi;
+  pdf = std::abs(vec3::dot(it.n, wi)) / 2 / base->area();
+  r = ray{it.p, wi, 0};
+  r.m = m;
+
+  return Le(r) * std::abs(vec3::dot(it.n, wi));
 }
 } // namespace miao

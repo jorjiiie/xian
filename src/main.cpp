@@ -1,5 +1,6 @@
 #include "miao/cameras/camera.hpp"
 #include "miao/cameras/film.hpp"
+#include "miao/core/distribution.hpp"
 #include "miao/core/material.hpp"
 #include "miao/core/primitive.hpp"
 #include "miao/core/scene.hpp"
@@ -7,6 +8,8 @@
 #include "miao/core/transform.hpp"
 #include "miao/core/utils.hpp"
 #include "miao/ds/bvh.hpp"
+#include "miao/integrators/photon.hpp"
+#include "miao/integrators/volumeintegrator.hpp"
 #include "miao/lights/light.hpp"
 #include "miao/renderers/progressive.hpp"
 #include "miao/volumes/medium.hpp"
@@ -37,7 +40,7 @@ int main() {
 
   ifstream str{"models/bunny.obj"};
 
-  Transformation down2 = Transformation::translate({2, 2.5, 0}) *
+  Transformation down2 = Transformation::translate({2, -2.5, 0}) *
                          Transformation::scale(2, 2, 2) *
                          Transformation::rotateY(120 + 90);
   Transformation up2 = Transformation::translate({0, 2, 0});
@@ -45,7 +48,7 @@ int main() {
   Transformation id{};
   spectrum li{1, 1, 1};
 
-  vec3 dD{0, 10, 0};
+  vec3 dD{1, 1, 0};
   homogeneous med{spectrum{0.03, 0.03, 0.03}, spectrum{0.05, 0.05, 0.05}, 0};
   MediumInterface emptyin{nullptr, &med};
   MediumInterface emptyout{&med, nullptr};
@@ -68,6 +71,7 @@ int main() {
       make_shared<sphere>(&tt, &invtt, false, 1, -2, 2, 0, 0, 0);
 
   shared_ptr<AreaLight> alight = make_shared<AreaLight>(li, lc);
+  alight->m = &med;
 
   shared_ptr<material> bs = make_shared<lambert>(spectrum{.5, .5, .5});
 
@@ -116,11 +120,11 @@ int main() {
   vector<GeoPrimitive> x;
   x.push_back(jaja);
   x.push_back(s2);
-  /* x.push_back(LW); */
-  /* x.push_back(RW); */
-  /* x.push_back(CEIL); */
-  /* x.push_back(FLOOR); */
-  /* x.push_back(BACK_WALL); */
+  x.push_back(LW);
+  x.push_back(RW);
+  x.push_back(CEIL);
+  x.push_back(FLOOR);
+  x.push_back(BACK_WALL);
   for (auto &y : tris) {
     x.push_back(y);
   }
@@ -144,10 +148,11 @@ int main() {
 
   TempCamera cam{f, {0, 0, -8}, {0, 1, 0}, {0, 0, 1}, 1, 0, 90};
   cam.med = &med;
-  ProgressiveRenderer renderer(s, cam, 30, 2000);
+  ProgressiveRenderer<PhotonIntegrator> renderer(s, cam, 30, 100);
 
   auto callback = [&](int x) {
-    freopen(("nn" + to_string(x) + ".ppm").c_str(), "w", stdout);
+    freopen(("jj" + to_string(x) + ".ppm").c_str(), "w", stdout);
+
     std::cerr << "bbox tests: " << cnter_::bbox_tests << "\n"
               << " primitive tests: " << cnter_::prim_tests
               << "\nrays cast:" << cnter_::rays_cast

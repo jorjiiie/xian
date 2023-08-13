@@ -29,7 +29,7 @@ public:
       : cam(cam), samples(samples) {}
   virtual spectrum Li(const ray &r, const scene &s, RNG &rng,
                       int depth = 0) const = 0;
-  void render(const scene &s) override;
+  virtual void render(const scene &s) override;
 
 protected:
   camera *cam;

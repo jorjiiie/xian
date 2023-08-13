@@ -23,10 +23,6 @@ namespace miao {
 
 void SampleIntegrator::render(const scene &s) {
 
-  int tile_size = 32;
-  int width = cam->f.get_width();
-  int height = cam->f.get_height();
-
   int num_threads = 1;
 
 // if openmp enabled
@@ -35,6 +31,13 @@ void SampleIntegrator::render(const scene &s) {
 #endif
 
   omp_set_num_threads(num_threads);
+
+  preprocess(s);
+
+  int tile_size = 32;
+  int width = cam->f.get_width();
+  int height = cam->f.get_height();
+
   std::cerr << "USING " << num_threads << " THREADS\n";
   std::vector<pcg32> rngs(num_threads);
   for (int i = 0; i < num_threads; i++) {
