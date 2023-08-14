@@ -1,6 +1,7 @@
 #include "miao/cameras/camera.hpp"
 #include "miao/cameras/film.hpp"
 #include "miao/core/distribution.hpp"
+#include "miao/core/interaction.hpp"
 #include "miao/core/material.hpp"
 #include "miao/core/primitive.hpp"
 #include "miao/core/scene.hpp"
@@ -35,8 +36,65 @@ void tmp(film::pix &p, int s) {
   p.g = std::sqrt(p.g / s);
   p.b = std::sqrt(p.b / s);
 }
+void test_refract() {
+
+  glass b = glass({spectrum{1, 1, 1}, 1, 1.5});
+  sphere s = sphere{&Transformation::identity,
+                    &Transformation::identity,
+                    false,
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0};
+
+  ray r{vec3{-2, 0, 0}, {2.0 / sqrt(5), -1.0 / sqrt(5), 0}, 0};
+
+  double t;
+  SurfaceInteraction isect;
+  auto y = s.intersect(r, t, isect);
+  if (!y) {
+    FAIL("WHY");
+  }
+  auto z = b.get_scatter(isect);
+  vec3 wi;
+  pcg32 rng;
+  double pdf;
+  bxdf_t sampled;
+  z->sample_f(r.d, wi, isect.n, rng, pdf, BSDF_ALL, sampled);
+
+  DEBUG(r.d.ts(), wi.ts());
+  r.o = isect.p + wi * vec3::eps;
+  r.d = wi;
+  if (!s.intersect(r, t, isect)) {
+    FAIL("NOOO");
+  }
+  z = b.get_scatter(isect);
+  z->sample_f(r.d, wi, isect.n, rng, pdf, BSDF_ALL, sampled);
+
+  DEBUG(r.d.ts(), wi.ts(), isect.p.ts(), isect.t);
+
+  exit(0);
+}
+void test_unisphere() {
+  pcg32 rng;
+  for (int i = 0; i < 100; i++) {
+    std::cerr << uniform_sphere(rng).ts() << "\n";
+  }
+  exit(0);
+}
 
 int main() {
+
+  // test_refract();
+  // test_unisphere();
+
+  cout << ((BSDF_NONE | miao::BSDF_TRANSMISSION | BSDF_SPECULAR |
+
+            BSDF_REFLECTION) &
+           BSDF_DIFFUSE)
+       << "\n";
 
   ifstream str{"models/bunny.obj"};
 
@@ -46,12 +104,14 @@ int main() {
   Transformation up2 = Transformation::translate({0, 2, 0});
   TriangleMesh mesh = TriangleMesh::read_obj(str, &down2, &up2);
   Transformation id{};
-  spectrum li{1, 1, 1};
+  spectrum li{1.5, 1.5, 1.5};
 
   vec3 dD{1, 1, 0};
   homogeneous med{spectrum{0.03, 0.03, 0.03}, spectrum{0.05, 0.05, 0.05}, 0};
-  MediumInterface emptyin{nullptr, &med};
-  MediumInterface emptyout{&med, nullptr};
+  medium *MEDIUM = &med;
+  MEDIUM = nullptr;
+  MediumInterface emptyin{nullptr, MEDIUM};
+  MediumInterface emptyout{MEDIUM, nullptr};
   Transformation tt = Transformation::translate(dD);
   Transformation invtt = Transformation::translate(-dD);
   Transformation left_wall = Transformation::translate(vec3{10005, 0, 0});
@@ -71,12 +131,13 @@ int main() {
       make_shared<sphere>(&tt, &invtt, false, 1, -2, 2, 0, 0, 0);
 
   shared_ptr<AreaLight> alight = make_shared<AreaLight>(li, lc);
-  alight->m = &med;
+  alight->m = MEDIUM;
 
   shared_ptr<material> bs = make_shared<lambert>(spectrum{.5, .5, .5});
 
   shared_ptr<material> gl =
       make_shared<glass>(spectrum{1.0, 1.0, 1.0}, 1.0, 1.5);
+  cerr << "GLASS IS " << gl.get() << "\n";
 
   GeoPrimitive LW{make_shared<sphere>(&left_wall, &left_wall_inv, false, 10000,
                                       0, 0, 0, 0, 0),
@@ -114,7 +175,7 @@ int main() {
 
   vector<GeoPrimitive> tris;
   for (auto &x : mesh.tris) {
-    tris.push_back(GeoPrimitive{x, red_wall, nullptr, emptyin});
+    tris.push_back(GeoPrimitive{x, gl, nullptr, emptyin});
   }
 
   vector<GeoPrimitive> x;
@@ -140,18 +201,18 @@ int main() {
   vector<shared_ptr<light>> lights;
   lights.push_back(alight);
 
-  int width = 1500;
-  int height = 1500;
+  int width = 500;
+  int height = 500;
   film f{width, height};
   scene s{lights, std::make_shared<bvh>(world)};
   // scene s{lights, std::make_shared<dumb_aggregate>(da)};
 
   TempCamera cam{f, {0, 0, -8}, {0, 1, 0}, {0, 0, 1}, 1, 0, 90};
-  cam.med = &med;
-  ProgressiveRenderer<PhotonIntegrator> renderer(s, cam, 30, 100);
+  cam.med = MEDIUM;
+  ProgressiveRenderer<VolumeIntegrator> renderer(s, cam, 30, 300);
 
   auto callback = [&](int x) {
-    freopen(("jj" + to_string(x) + ".ppm").c_str(), "w", stdout);
+    freopen(("aa" + to_string(x) + ".ppm").c_str(), "w", stdout);
 
     std::cerr << "bbox tests: " << cnter_::bbox_tests << "\n"
               << " primitive tests: " << cnter_::prim_tests
