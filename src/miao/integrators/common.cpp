@@ -29,8 +29,7 @@ spectrum direct(const interaction &it, const light &yo, const scene &s,
 
       tp = b->f(wi, isect.wo, BSDF_ALL) *
            std::abs(vec3::dot(wi, isect.n)); // should be isect.sn but oh well
-      DEBUG("tp is ", tp.ts());
-      spdf = b->pdf(wi, isect.wo, isect.n); // same here
+      spdf = b->pdf(wi, isect.wo, isect.n);  // same here
     } else {
       const MediumInteraction &mi = (const MediumInteraction &)it;
 
@@ -47,8 +46,6 @@ spectrum direct(const interaction &it, const light &yo, const scene &s,
       }
     }
   }
-  if (!Ld.isBlack())
-    DEBUG("what the fuck ", Ld.ts());
 
   {
     spectrum tp;
@@ -62,7 +59,6 @@ spectrum direct(const interaction &it, const light &yo, const scene &s,
       const MediumInteraction &mi = (const MediumInteraction &)it;
       // i don't understand this part but ok
       spdf = mi.ph->sample_p(mi.wo, wi, rng);
-
       tp = spectrum{spdf};
     }
     if (spdf > 0 && !tp.isBlack()) {
@@ -80,7 +76,17 @@ spectrum direct(const interaction &it, const light &yo, const scene &s,
 
       ray r{isect.p, wi, 0};
       // auto in = s.intersect(r, 0);
-      auto in = s.intersectTr(r, 0, tp, rng);
+
+      spectrum tp2;
+      auto in = s.intersectTr(r, 0, tp2, rng);
+
+      if (tp2.isBlack())
+        return Ld;
+
+      tp *= tp2;
+      DEBUG(tp2.ts(), " hello pls ", tp.ts());
+
+      // auto in = s.intersect(r, 0);
 
       if (in && in->pr->get_area_light() == &yo) {
         // this is the light we want
@@ -89,8 +95,6 @@ spectrum direct(const interaction &it, const light &yo, const scene &s,
     }
   }
 
-  if (!Ld.isBlack())
-    DEBUG(Ld.ts(), " no fucking way");
   return Ld;
 }
 

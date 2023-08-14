@@ -63,10 +63,14 @@ void SampleIntegrator::render(const scene &s) {
         for (int k = 0; k < samples; k++) {
           ray r;
           cam->gen_ray(i, j, rng, r);
-          L += Li(r, s, rng, 10);
+
+          spectrum li = Li(r, s, rng, 10);
+          L += li;
+          DEBUG("LI IS ", li.ts());
         }
         // do something with L (add to film or sumthin)
 
+        DEBUG("Overall is ", L.ts());
         cam->f.add_sample(i, j, L, samples);
         // f->add(L) or something
       }
@@ -108,13 +112,13 @@ spectrum PathIntegrator::Li(const ray &ra, const scene &s, RNG &rng,
       const AreaLight *alight = isect.pr->get_area_light();
       if (alight) {
         L += throughput * alight->Le(r);
+        DEBUG(throughput.ts());
         // if (onoff)
         // DEBUG("hit light after! THIS IS A L(DS)*SDE PATH", throughput.ts());
       }
     }
-    if (i == 0) {
+    if (i != 0) {
       L += throughput * sample_light(isect, s, rng);
-      break;
     }
 
     auto mat = isect.pr->get_material();
@@ -136,7 +140,7 @@ spectrum PathIntegrator::Li(const ray &ra, const scene &s, RNG &rng,
       break;
     throughput *= f * std::abs(vec3::dot(isect.n, wi)) / pdf;
 
-    r.o = isect.p;
+    r.o = isect.p + vec3::eps * wi;
     r.d = wi;
     if (i > 3) {
       double q = std::max(0.05, 1 - throughput.magnitude() * 0.3333);
@@ -145,6 +149,10 @@ spectrum PathIntegrator::Li(const ray &ra, const scene &s, RNG &rng,
       throughput /= (1 - q);
     }
   }
+
+  /* if (L.magnitude() > 5) { */
+  /*   std::cerr << "bright asf" << L.ts() << "\n"; */
+  /* } */
   return L;
 }
 } // namespace miao

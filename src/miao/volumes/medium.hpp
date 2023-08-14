@@ -32,8 +32,8 @@ public:
   virtual spectrum sample(const ray &r, RNG &rng,
                           MediumInteraction &mi) const override;
 
-private:
-  // absorb, scatter, both
+  // private:
+  //  absorb, scatter, both
   const spectrum sa, ss, st;
   const double g;
 };

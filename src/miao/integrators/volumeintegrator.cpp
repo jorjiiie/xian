@@ -97,7 +97,7 @@ spectrum VolumeIntegrator::Li(const ray &rx, const scene &s, RNG &rng,
         break;
       tp *= f * std::abs(vec3::dot(isect.n, wi)) / pdf;
 
-      r.o = isect.p;
+      r.o = isect.p + vec3::eps * wi;
       r.d = wi;
     }
 

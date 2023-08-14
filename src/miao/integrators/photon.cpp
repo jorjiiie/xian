@@ -26,7 +26,8 @@ int64_t good_photons = 0;
 int64_t tot_photons = 0;
 
 spectrum PhotonIntegrator::sample_lights(const scene &s, ray &r,
-                                         discrete_1d &distr, RNG &rng) const {
+                                         discrete_1d &distr, RNG &rng,
+                                         spectrum tot) const {
   int sampled_light = clamp(distr.sample(rng), 0, (int)s.lights.size() - 1);
 
   auto li = s.lights[sampled_light];
@@ -35,7 +36,7 @@ spectrum PhotonIntegrator::sample_lights(const scene &s, ray &r,
   auto x = li->sample(r, rng, pdf);
   DEBUG("THROUGHPUT?? ", x.ts(), " ", pdf);
 
-  return x / pdf;
+  return x / pdf * tot / li->power();
 }
 
 void PhotonIntegrator::preprocess(const scene &s) {
@@ -51,8 +52,10 @@ void PhotonIntegrator::preprocess(const scene &s) {
 #endif
 
   std::vector<double> light_powers;
+  spectrum total_power{};
   for (const auto &ptr : s.lights) {
     light_powers.push_back(ptr->power().magnitude());
+    total_power += ptr->power();
   }
 
   discrete_1d li_distr(light_powers);
@@ -78,7 +81,8 @@ void PhotonIntegrator::preprocess(const scene &s) {
       // sample the scene lights;
       ray r;
 
-      spectrum tp = sample_lights(s, r, li_distr, rng);
+      spectrum tp = sample_lights(s, r, li_distr, rng, total_power);
+      DEBUG(tp.ts(), " sick tp bro");
       // we only sample indirect illumination
       bool interacted = false;
       for (int bounces = 0; bounces < m_depth; bounces++) {
@@ -109,7 +113,8 @@ void PhotonIntegrator::preprocess(const scene &s) {
               ++vol_photons;
               // this needs to account for the fraction that gets boosted?
               // sigma_s
-              vpm[c].push_back(Photon{mi.p, mi.wo, tp});
+              vpm[c].push_back(Photon{
+                  mi.p, mi.wo, tp * static_cast<const homogeneous *>(med)->ss});
               /* DEBUG("DEPOSITING A VOLUME PHOTON WITH TP", tp.ts(), " at cell
                * ", */
               /*       c.i, ' ', c.j, ' ', c.k, " with point ", mi.p.ts()); */
@@ -174,7 +179,8 @@ void PhotonIntegrator::preprocess(const scene &s) {
   for (int i = 0; i < num_shooters; i++)
     shoot();
 
-  DEBUG("DONE SHOOTING PHOTONS ", vol_photons, " ", s_photons);
+  std::cerr << "DONE SHOOTING PHOTONS " << vol_photons << " " << s_photons
+            << "\n";
   std::cerr << "done shooting photons, statistics is " << good_photons << " "
             << tot_photons << " for " << good_photons * 1.0 / tot_photons << " "
             << vpm.size() << " " << spm.size() << "\n";
@@ -303,7 +309,7 @@ spectrum PhotonIntegrator::Li(const ray &ra, const scene &s, RNG &rng,
       spectrum li = sample_light(isect, s, rng);
       DEBUG(spec.ts(), li.ts(), " ", i, " ", isect.p.ts(), tp.ts());
       L += tp * spec;
-      L += tp * li;
+      // L += tp * li;
       DEBUG("WTF ", L.ts());
       return L;
     }

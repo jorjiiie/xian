@@ -27,14 +27,20 @@ double FrDielectric(double costi, double etaI, double etaT) {
   return (rpar * rpar + rperp * rperp) / 2;
 }
 bool refract(const vec3 &wi, const vec3 &n, double eta, vec3 &jaja) {
+  // DEBUG("refraction lol ", vec3::dot(wi, n), wi.ts(), n.ts());
   double cosi = vec3::dot(wi, n);
+  if (cosi < 0) {
+    FAIL("lol");
+  }
   double sin2i = 1.0 - cosi * cosi;
   double sin2t = eta * eta * sin2i;
   if (sin2t >= 1.0) {
     return false;
   }
   double cost = std::sqrt(1 - sin2t);
-  jaja = eta * -wi + (eta * cosi - cost) * n;
+
+  jaja = eta * wi - (eta * cosi - cost) * n;
+  // DEBUG(jaja.ts(), "NOO ", cost, " ", eta);
   return true;
 }
 
@@ -151,14 +157,13 @@ spectrum specularbtdf::sample_f(const vec3 &wo, vec3 &wi, const vec3 &n, RNG &,
 
 spectrum specular::sample_f(const vec3 &wo, vec3 &wi, const vec3 &n, RNG &rng,
                             double &pdf) const {
+  DEBUG(wo.ts());
   double F = BXDF::FrDielectric(-vec3::dot(wo, n), etaA, etaB); // flipped LOL
-  DEBUG("FUCK ", F);
+  // DEBUG("FUCK ", F);
   auto z = rng.rfloat();
-  DEBUG(z);
-  DEBUG(rng.rfloat());
   if (rng.rfloat() < F) {
 
-    DEBUG("reflect ");
+    // DEBUG("reflect ");
     vec3 norm = n;
     if (vec3::dot(wo, n) > 0)
       norm = -n;
@@ -170,12 +175,13 @@ spectrum specular::sample_f(const vec3 &wo, vec3 &wi, const vec3 &n, RNG &rng,
   bool entering = vec3::dot(wo, n) < 0;
   double etaI = entering ? etaA : etaB;
   double etaT = entering ? etaB : etaA;
-  vec3 norm = entering ? n : -n;
-  DEBUG("WHAT");
-  if (!BXDF::refract(-wo, norm, etaI / etaT, wi))
+  // DEBUG("ENTERING IS ", wo.ts(), " NORM IS ", n.ts());
+  vec3 norm = entering ? -n : n;
+  // DEBUG("WHAT ", entering, " ", norm.ts());
+  if (!BXDF::refract(wo, norm, etaI / etaT, wi))
     return spectrum{};
 
-  DEBUG("WHAAT");
+  // DEBUG("WHAAT");
   pdf = 1 - F;
   return t * pdf / std::abs(vec3::dot(wi, n)) * (etaT * etaT / etaI / etaI);
 }

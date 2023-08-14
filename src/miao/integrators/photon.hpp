@@ -20,7 +20,7 @@ class discrete_1d;
 // a photon mapping integrator in volumetric spaces
 class PhotonIntegrator : public SampleIntegrator {
 public:
-  static constexpr int m_depth = 10;
+  static constexpr int m_depth = 15;
   static constexpr int num_photons = 100000;
   static constexpr double inv_photons = 1.0 / num_photons;
   PhotonIntegrator(camera *cam, int samples = 32, double r = .5)
@@ -60,8 +60,8 @@ private:
   // (surface, volume) photon map
   // we forgo the original caustic vs illumination maps by jensen
   std::unordered_map<cell, std::vector<Photon>, hash> spm, vpm;
-  spectrum sample_lights(const scene &s, ray &r, discrete_1d &distr,
-                         RNG &rng) const;
+  spectrum sample_lights(const scene &s, ray &r, discrete_1d &distr, RNG &rng,
+                         spectrum) const;
   // fnc is a function that calculates the bsdf or phase function wrt a given
   // direction wi
   spectrum
