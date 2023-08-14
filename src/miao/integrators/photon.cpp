@@ -307,9 +307,9 @@ spectrum PhotonIntegrator::Li(const ray &ra, const scene &s, RNG &rng,
       // diffuse, use a surface estimate
       spectrum spec = estimate_indirect(isect);
       spectrum li = sample_light(isect, s, rng);
-      DEBUG(spec.ts(), li.ts(), " ", i, " ", isect.p.ts(), tp.ts());
+      // DEBUG(spec.ts(), li.ts(), " ", i, " ", isect.p.ts(), tp.ts());
       L += tp * spec;
-      // L += tp * li;
+      L += tp * li;
       DEBUG("WTF ", L.ts());
       return L;
     }
@@ -326,7 +326,7 @@ spectrum PhotonIntegrator::Li(const ray &ra, const scene &s, RNG &rng,
       break;
     tp *= f * std::abs(vec3::dot(isect.n, wi)) / pdf;
 
-    r.o = isect.p;
+    r.o = isect.p + wi * vec3::eps;
     r.d = wi;
 
     r.maxt = D_INFINITY;

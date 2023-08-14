@@ -21,7 +21,7 @@ class discrete_1d;
 class PhotonIntegrator : public SampleIntegrator {
 public:
   static constexpr int m_depth = 15;
-  static constexpr int num_photons = 100000;
+  static constexpr int num_photons = 300000;
   static constexpr double inv_photons = 1.0 / num_photons;
   PhotonIntegrator(camera *cam, int samples = 32, double r = .5)
       : SampleIntegrator(cam, samples), radius(r) {}
