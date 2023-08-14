@@ -29,7 +29,7 @@ spectrum AreaLight::sample(ray &r, RNG &rng, double &pdf) const {
 
   // note that we only emit from one side here - make sure you don't emit to
   // other side then
-  pdf = std::abs(vec3::dot(it.n, wi)) / base->area();
+  pdf = std::abs(vec3::dot(it.n, wi)) / base->area() * INV_PI;
   r = ray{it.p + wi * vec3::eps * vec3::eps, wi, 0};
   r.m = m;
 

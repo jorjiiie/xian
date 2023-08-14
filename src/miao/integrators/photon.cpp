@@ -84,7 +84,7 @@ void PhotonIntegrator::preprocess(const scene &s) {
       spectrum tp = sample_lights(s, r, li_distr, rng, total_power);
       DEBUG(tp.ts(), " sick tp bro");
       // we only sample indirect illumination
-      bool interacted = false;
+      bool interacted = true;
       for (int bounces = 0; bounces < m_depth; bounces++) {
         auto tmp = s.intersect(r, 0);
         SurfaceInteraction &isect = *tmp;
@@ -107,7 +107,7 @@ void PhotonIntegrator::preprocess(const scene &s) {
           // phase function! get new direction
           vec3 wi;
           if (interacted) {
-            cell c = get_cell(mi.p);
+            cell c = get_cell_v(mi.p);
 #pragma omp critical
             {
               ++vol_photons;
@@ -137,7 +137,7 @@ void PhotonIntegrator::preprocess(const scene &s) {
 
           if ((b->get_flags() & BSDF_DIFFUSE) != 0 && interacted) {
             // deposit a photon here!
-            cell c = get_cell(isect.p);
+            cell c = get_cell_s(isect.p);
 #pragma omp critical
             {
               spm[c].push_back({Photon{isect.p, isect.wo, tp}});
@@ -194,7 +194,8 @@ void PhotonIntegrator::preprocess(const scene &s) {
 spectrum PhotonIntegrator::estimate(
     const cell &c,
     const std::unordered_map<cell, std::vector<Photon>, hash> &mp,
-    const std::function<spectrum(const vec3 &)> &fnc, const vec3 &p) const {
+    const std::function<spectrum(const vec3 &)> &fnc, const vec3 &p,
+    double radius) const {
   spectrum L{};
 
   const int &x = c.i;
@@ -230,29 +231,29 @@ spectrum PhotonIntegrator::estimate(
 spectrum
 PhotonIntegrator::estimate_indirect(const SurfaceInteraction &si) const {
   const vec3 &p = si.p;
-  cell c = get_cell(p);
+  cell c = get_cell_s(p);
   auto BSDF = si.pr->get_material()->get_scatter(si);
   auto calc = [&](const vec3 &wi) { return BSDF->f(wi, si.wo, BSDF_ALL); };
 
-  spectrum L = estimate(c, spm, calc, si.p);
+  spectrum L = estimate(c, spm, calc, si.p, s_radius);
 
   // can optimize this but whatever
-  return L * INV_PI / radius / radius * inv_photons;
+  return L * INV_PI / s_radius / s_radius * inv_photons;
 }
 
 spectrum
 PhotonIntegrator::estimate_indirect(const MediumInteraction &mi) const {
 
   const vec3 &p = mi.p;
-  cell c = get_cell(p);
+  cell c = get_cell_v(p);
   auto phase = mi.ph;
   auto calc = [&](const vec3 &wi) { return phase->p(wi, mi.wo); };
 
-  spectrum L = estimate(c, vpm, calc, mi.p);
+  spectrum L = estimate(c, vpm, calc, mi.p, v_radius);
 
   // can optimize this but whatever
   // get avg illuminance divided by the kernel volume 4/3 pi r^3
-  return L * INV_PI / radius / radius / radius * 3 * 0.25 * inv_photons;
+  return L * INV_PI / v_radius / v_radius / v_radius * 3 * 0.25 * inv_photons;
 }
 
 spectrum PhotonIntegrator::Li(const ray &ra, const scene &s, RNG &rng,
@@ -306,10 +307,10 @@ spectrum PhotonIntegrator::Li(const ray &ra, const scene &s, RNG &rng,
     if ((flags & BSDF_DIFFUSE) != 0) {
       // diffuse, use a surface estimate
       spectrum spec = estimate_indirect(isect);
-      spectrum li = sample_light(isect, s, rng);
-      // DEBUG(spec.ts(), li.ts(), " ", i, " ", isect.p.ts(), tp.ts());
+      // spectrum li = sample_light(isect, s, rng);
+      //  DEBUG(spec.ts(), li.ts(), " ", i, " ", isect.p.ts(), tp.ts());
       L += tp * spec;
-      L += tp * li;
+      // L += tp * li;
       DEBUG("WTF ", L.ts());
       return L;
     }

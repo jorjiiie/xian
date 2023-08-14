@@ -10,6 +10,7 @@
 #include "miao/core/utils.hpp"
 #include "miao/ds/bvh.hpp"
 #include "miao/integrators/photon.hpp"
+#include "miao/integrators/ppm.hpp"
 #include "miao/integrators/volumeintegrator.hpp"
 #include "miao/lights/light.hpp"
 #include "miao/renderers/progressive.hpp"
@@ -104,10 +105,10 @@ int main() {
   Transformation up2 = Transformation::translate({0, 2, 0});
   TriangleMesh mesh = TriangleMesh::read_obj(str, &down2, &up2);
   Transformation id{};
-  spectrum li{1.5, 1.5, 1.5};
+  spectrum li{4, 4, 4};
 
   vec3 dD{1, 1, 0};
-  homogeneous med{spectrum{0.03, 0.03, 0.03}, spectrum{0.05, 0.05, 0.05}, 0};
+  homogeneous med{spectrum{0.1, 0.1, 0.1}, spectrum{0.07, 0.07, 0.07}, 0};
   medium *MEDIUM = &med;
   MEDIUM = nullptr;
   MediumInterface emptyin{nullptr, MEDIUM};
@@ -201,15 +202,15 @@ int main() {
   vector<shared_ptr<light>> lights;
   lights.push_back(alight);
 
-  int width = 500;
-  int height = 500;
+  int width = 300;
+  int height = 300;
   film f{width, height};
   scene s{lights, std::make_shared<bvh>(world)};
   // scene s{lights, std::make_shared<dumb_aggregate>(da)};
 
   TempCamera cam{f, {0, 0, -8}, {0, 1, 0}, {0, 0, 1}, 1, 0, 90};
   cam.med = MEDIUM;
-  ProgressiveRenderer<VolumeIntegrator> renderer(s, cam, 30, 300);
+  ProgressiveRenderer<PPMIntegrator> renderer(s, cam, 30, 100);
 
   auto callback = [&](int x) {
     freopen(("aa" + to_string(x) + ".ppm").c_str(), "w", stdout);

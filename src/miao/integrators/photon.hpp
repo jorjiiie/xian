@@ -21,19 +21,20 @@ class discrete_1d;
 class PhotonIntegrator : public SampleIntegrator {
 public:
   static constexpr int m_depth = 15;
-  static constexpr int num_photons = 300000;
-  static constexpr double inv_photons = 1.0 / num_photons;
-  PhotonIntegrator(camera *cam, int samples = 32, double r = .5)
-      : SampleIntegrator(cam, samples), radius(r) {}
-  void set_radius(double r) { radius = r; }
+  PhotonIntegrator(camera *cam, int samples = 32, double r = .5,
+                   int np = 100000)
+      : SampleIntegrator(cam, samples), v_radius(r), s_radius(r),
+        num_photons(np), inv_photons(1.0 / np) {}
   virtual void preprocess(const scene &s) override;
   virtual spectrum estimate_indirect(const SurfaceInteraction &) const;
   virtual spectrum estimate_indirect(const MediumInteraction &) const;
   virtual spectrum Li(const ray &r, const scene &s, RNG &rng,
                       int depth = 0) const override;
 
-private:
-  double radius;
+protected:
+  int num_photons;
+  double inv_photons;
+  double v_radius, s_radius;
   struct cell {
     int i, j, k;
     bool operator==(const cell &c) const {
@@ -51,10 +52,16 @@ private:
     vec3 wo;
     spectrum flux;
   };
-  cell get_cell(const vec3 &p) const {
-    int i = std::floor(p.x / radius);
-    int j = std::floor(p.y / radius);
-    int k = std::floor(p.z / radius);
+  cell get_cell_s(const vec3 &p) const {
+    int i = std::floor(p.x / s_radius);
+    int j = std::floor(p.y / s_radius);
+    int k = std::floor(p.z / s_radius);
+    return cell{i, j, k};
+  }
+  cell get_cell_v(const vec3 &p) const {
+    int i = std::floor(p.x / v_radius);
+    int j = std::floor(p.y / v_radius);
+    int k = std::floor(p.z / v_radius);
     return cell{i, j, k};
   }
   // (surface, volume) photon map
@@ -67,7 +74,8 @@ private:
   spectrum
   estimate(const cell &c,
            const std::unordered_map<cell, std::vector<Photon>, hash> &mp,
-           const std::function<spectrum(const vec3 &)> &, const vec3 &) const;
+           const std::function<spectrum(const vec3 &)> &, const vec3 &,
+           double radius) const;
 };
 
 } // namespace miao
