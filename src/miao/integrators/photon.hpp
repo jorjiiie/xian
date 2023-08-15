@@ -53,15 +53,15 @@ protected:
     spectrum flux;
   };
   cell get_cell_s(const vec3 &p) const {
-    int i = std::floor(p.x / s_radius);
-    int j = std::floor(p.y / s_radius);
-    int k = std::floor(p.z / s_radius);
+    int i = std::floor(p.x / s_radius + 0.5);
+    int j = std::floor(p.y / s_radius + 0.5);
+    int k = std::floor(p.z / s_radius + 0.5);
     return cell{i, j, k};
   }
   cell get_cell_v(const vec3 &p) const {
-    int i = std::floor(p.x / v_radius);
-    int j = std::floor(p.y / v_radius);
-    int k = std::floor(p.z / v_radius);
+    int i = std::floor(p.x / v_radius + 0.5);
+    int j = std::floor(p.y / v_radius + 0.5);
+    int k = std::floor(p.z / v_radius + 0.5);
     return cell{i, j, k};
   }
   // (surface, volume) photon map

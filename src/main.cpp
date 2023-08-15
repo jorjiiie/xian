@@ -105,12 +105,12 @@ int main() {
   Transformation up2 = Transformation::translate({0, 2, 0});
   TriangleMesh mesh = TriangleMesh::read_obj(str, &down2, &up2);
   Transformation id{};
-  spectrum li{4, 4, 4};
+  spectrum li{20.4, 11.4, 6.0}; // ????
 
   vec3 dD{1, 1, 0};
-  homogeneous med{spectrum{0.1, 0.1, 0.1}, spectrum{0.07, 0.07, 0.07}, 0};
+  homogeneous med{spectrum{0.5, 0.055, 0.015}, spectrum{0.06, 0.10, 0.25}, 0};
   medium *MEDIUM = &med;
-  MEDIUM = nullptr;
+  // MEDIUM = nullptr;
   MediumInterface emptyin{nullptr, MEDIUM};
   MediumInterface emptyout{MEDIUM, nullptr};
   Transformation tt = Transformation::translate(dD);
@@ -129,7 +129,7 @@ int main() {
   shared_ptr<material> met = make_shared<metal>(spectrum{1.0});
 
   shared_ptr<shape> lc =
-      make_shared<sphere>(&tt, &invtt, false, 1, -2, 2, 0, 0, 0);
+      make_shared<sphere>(&tt, &invtt, false, 0.1, -2, 2, 0, 0, 0);
 
   shared_ptr<AreaLight> alight = make_shared<AreaLight>(li, lc);
   alight->m = MEDIUM;
@@ -137,7 +137,7 @@ int main() {
   shared_ptr<material> bs = make_shared<lambert>(spectrum{.5, .5, .5});
 
   shared_ptr<material> gl =
-      make_shared<glass>(spectrum{1.0, 1.0, 1.0}, 1.0, 1.5);
+      make_shared<glass>(spectrum{1.0, 1.0, 1.0}, 1.0, 1.35);
   cerr << "GLASS IS " << gl.get() << "\n";
 
   GeoPrimitive LW{make_shared<sphere>(&left_wall, &left_wall_inv, false, 10000,
@@ -160,7 +160,7 @@ int main() {
   Transformation vertshift = Transformation::translate({-1, 5, 0});
   Transformation ov = Transformation::translate({1, -5, 0});
 
-  Transformation move = Transformation::translate({-1.2, 2, -.3});
+  Transformation move = Transformation::translate({-3, 2, -.3});
   Transformation back = Transformation::translate({1.2, -2, .3});
 
   GeoPrimitive jaja{lc, bs, alight};
@@ -182,11 +182,11 @@ int main() {
   vector<GeoPrimitive> x;
   x.push_back(jaja);
   x.push_back(s2);
-  x.push_back(LW);
-  x.push_back(RW);
-  x.push_back(CEIL);
-  x.push_back(FLOOR);
-  x.push_back(BACK_WALL);
+  /* x.push_back(LW); */
+  /* x.push_back(RW); */
+  /* x.push_back(CEIL); */
+  /* x.push_back(FLOOR); */
+  /* x.push_back(BACK_WALL); */
   for (auto &y : tris) {
     x.push_back(y);
   }
@@ -210,7 +210,7 @@ int main() {
 
   TempCamera cam{f, {0, 0, -8}, {0, 1, 0}, {0, 0, 1}, 1, 0, 90};
   cam.med = MEDIUM;
-  ProgressiveRenderer<PPMIntegrator> renderer(s, cam, 30, 100);
+  ProgressiveRenderer<VolumeIntegrator> renderer(s, cam, 1, 500);
 
   auto callback = [&](int x) {
     freopen(("aa" + to_string(x) + ".ppm").c_str(), "w", stdout);

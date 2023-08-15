@@ -138,21 +138,37 @@ TriangleMesh::TriangleMesh(const Transformation *otw, const Transformation *wto,
                            std::vector<std::array<std::array<int, 3>, 3>> faces)
     : v(vertices_), n(normals_), t(textures_) {
 
-  for (vec3 &vec : v)
+  for (vec3 &vec : v) {
     vec = (*otw)(vec, true); // these are points
+  }
 
   for (vec3 &vec : n)
     vec = (*otw)(vec, 1); // normals
 
   for (auto &z : faces) {
+    std::string str = "";
+    for (int i = 0; i < 3; i++) {
+      str += std::to_string(z[i][0]);
+      str += " ";
+      str += std::to_string(z[i][1]);
+      str += " ";
+      str += std::to_string(z[i][2]);
+      str += " || ";
+    }
+    DEBUG(str);
+    DEBUG(v[z[0][0]].ts(), v[z[0][1]].ts(), v[z[0][2]].ts());
+
     tris.push_back(std::make_shared<triangle>(this, z));
   }
+  DEBUG(v.size(), " ", n.size(), " ", tris.size());
+  // exit(1);
 }
 
 BBox triangle::getBBox() const {
   const vec3 &v1 = mesh->v[vertices[0]];
   const vec3 &v2 = mesh->v[vertices[1]];
   const vec3 &v3 = mesh->v[vertices[2]];
+  DEBUG(v1.ts(), v2.ts(), v3.ts());
   return BBox{v1, v2}.Union(v3);
 }
 BBox triangle::worldBBox() const { return getBBox(); }
@@ -161,10 +177,12 @@ bool triangle::intersect(const ray &r, double &t,
                          SurfaceInteraction &isect) const {
   vec3 e1, e2, h, s, q;
   double a, f, u, v;
+
   const vec3 &v1 = mesh->v[vertices[0]];
   const vec3 &v2 = mesh->v[vertices[1]];
   const vec3 &v3 = mesh->v[vertices[2]];
-
+  const std::vector<vec3> &j = mesh->v;
+  DEBUG("HERE BRUH\n");
   e1 = v2 - v1;
   e2 = v3 - v1;
   h = vec3::cross(r.d, e2);
@@ -194,6 +212,8 @@ bool triangle::intersect(const ray &r, double &t,
   isect.n = gnormal();
   isect.sn = snormal(u, v);
   isect.t = t;
+
+  DEBUG("INTERSECTED A TRIANGLE WHATAFUCK");
 
   return true;
 }

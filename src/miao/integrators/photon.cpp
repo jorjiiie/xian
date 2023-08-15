@@ -303,7 +303,7 @@ spectrum PhotonIntegrator::Li(const ray &ra, const scene &s, RNG &rng,
 
     if (mi.ph != nullptr) {
       // L += tp * sample_light(mi, s, rng);
-
+      // this needs to compute the beam transmittance
       spectrum spec = estimate_indirect(mi);
       DEBUG(spec.ts(), tp.ts(), " first one is volume estimate");
       L += tp * spec;

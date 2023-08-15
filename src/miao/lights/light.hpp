@@ -23,7 +23,7 @@ public:
   virtual spectrum sample(ray &r, RNG &rng, double &pdf) const = 0;
   virtual spectrum power() const = 0;
   // for leaving the light
-  const medium *m;
+  const medium *m = nullptr;
 };
 
 class AreaLight : public light {
@@ -43,6 +43,7 @@ private:
   std::shared_ptr<shape> base;
   double area;
 };
+
 } // namespace miao
 
 #endif // LIGHT_HPP
