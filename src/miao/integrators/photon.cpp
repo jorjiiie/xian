@@ -19,11 +19,14 @@
 #include "miao/volumes/medium.hpp"
 
 #include <omp.h>
+#include <unordered_map>
 
 namespace miao {
 
 int64_t good_photons = 0;
 int64_t tot_photons = 0;
+int64_t v_avg = 0;
+int64_t v_amt = 0;
 
 spectrum PhotonIntegrator::sample_lights(const scene &s, ray &r,
                                          discrete_1d &distr, RNG &rng,
@@ -34,7 +37,6 @@ spectrum PhotonIntegrator::sample_lights(const scene &s, ray &r,
 
   double pdf;
   auto x = li->sample(r, rng, pdf);
-  DEBUG("THROUGHPUT?? ", x.ts(), " ", pdf);
 
   return x / pdf * tot / li->power();
 }
@@ -63,6 +65,10 @@ void PhotonIntegrator::preprocess(const scene &s) {
   for (int i = 0; i < num_shooters; i++) {
     rngs[i].seed(rand() * rand());
   }
+  std::vector<std::unordered_map<cell, std::vector<Photon>, hash>> vmps(
+      num_shooters);
+  std::vector<std::unordered_map<cell, std::vector<Photon>, hash>> smps(
+      num_shooters);
 
   int vol_photons = 0, s_photons = 0;
   auto shoot = [&]() {
@@ -106,18 +112,18 @@ void PhotonIntegrator::preprocess(const scene &s) {
         if (mi.ph != nullptr) {
           // phase function! get new direction
           vec3 wi;
-          if (interacted) {
+          if (interacted || true) {
             cell c = get_cell_v(mi.p);
-#pragma omp critical
             {
               ++vol_photons;
-              // this needs to account for the fraction that gets boosted?
-              // sigma_s
-              vpm[c].push_back(Photon{
-                  mi.p, mi.wo, tp * static_cast<const homogeneous *>(med)->ss});
-              /* DEBUG("DEPOSITING A VOLUME PHOTON WITH TP", tp.ts(), " at cell
-               * ", */
-              /*       c.i, ' ', c.j, ' ', c.k, " with point ", mi.p.ts()); */
+              // this needs to account for the fraction that gets
+              // boosted? sigma_s
+              vmps[idx][c].push_back(Photon{mi.p, mi.wo, tp});
+              // vpm[c].push_back(Photon{
+              // mi.p, mi.wo, tp /* * static_cast<const homogeneous *>(med)->ss
+              // */});
+              DEBUG("DEPOSITING A VOLUME PHOTON WITH TP", tp.ts(), " at cell",
+                    c.i, ' ', c.j, ' ', c.k, " with point ", mi.p.ts());
             }
           }
           // deposit something here btw
@@ -138,14 +144,12 @@ void PhotonIntegrator::preprocess(const scene &s) {
           if ((b->get_flags() & BSDF_DIFFUSE) != 0 && interacted) {
             // deposit a photon here!
             cell c = get_cell_s(isect.p);
-#pragma omp critical
             {
-              spm[c].push_back({Photon{isect.p, isect.wo, tp}});
+              smps[idx][c].push_back(Photon{isect.p, isect.wo, tp});
               ++s_photons;
-              if (isect.p[1] < 6)
-                DEBUG("DEPOSITING A SURFACE PHOTON WITH TP", tp.ts(),
-                      " at cell ", c.i, ' ', c.j, ' ', c.k, " with point ",
-                      isect.p.ts(), r.o.ts(), r.d.ts(), mat);
+              DEBUG("DEPOSITING A SURFACE PHOTON WITH TP", tp.ts(), " at cell ",
+                    c.i, ' ', c.j, ' ', c.k, " with point ", isect.p.ts(),
+                    r.o.ts(), r.d.ts(), mat);
             }
           }
           interacted = true;
@@ -179,11 +183,21 @@ void PhotonIntegrator::preprocess(const scene &s) {
   for (int i = 0; i < num_shooters; i++)
     shoot();
 
+  for (int i = 0; i < num_shooters; i++) {
+    for (const auto &[cell, photons] : vmps[i]) {
+      vpm[cell].insert(vpm[cell].end(), photons.begin(), photons.end());
+    }
+    for (const auto &[cell, photons] : smps[i]) {
+      spm[cell].insert(spm[cell].end(), photons.begin(), photons.end());
+    }
+  }
+
   std::cerr << "DONE SHOOTING PHOTONS " << vol_photons << " " << s_photons
             << "\n";
   std::cerr << "done shooting photons, statistics is " << good_photons << " "
             << tot_photons << " for " << good_photons * 1.0 / tot_photons << " "
-            << vpm.size() << " " << spm.size() << "\n";
+            << vpm.size() << " " << spm.size() << " " << v_amt << " " << v_avg
+            << " " << v_avg * 1.0 / v_amt << "\n";
   /* for (const auto &z : spm) { */
   /*   const cell &c = z.first; */
   /*   std::cerr << "cell " << c.i << " " << c.j << " " << c.k << "\n"; */
@@ -224,6 +238,13 @@ spectrum PhotonIntegrator::estimate(
       }
     }
   }
+  if (mp.size() == vpm.size()) {
+    v_avg += n_phots;
+    v_amt++;
+    DEBUG(n_phots, " volume estimate! ");
+  } else {
+    DEBUG("surface estimate!");
+  }
   DEBUG(n_phots, " ", L.ts());
   return L;
 }
@@ -243,7 +264,7 @@ PhotonIntegrator::estimate_indirect(const SurfaceInteraction &si) const {
 
 spectrum
 PhotonIntegrator::estimate_indirect(const MediumInteraction &mi) const {
-
+  // std::cerr << "what\n";
   const vec3 &p = mi.p;
   cell c = get_cell_v(p);
   auto phase = mi.ph;
@@ -281,10 +302,10 @@ spectrum PhotonIntegrator::Li(const ray &ra, const scene &s, RNG &rng,
     }
 
     if (mi.ph != nullptr) {
-      L += tp * sample_light(mi, s, rng);
+      // L += tp * sample_light(mi, s, rng);
 
       spectrum spec = estimate_indirect(mi);
-      // DEBUG(spec.ts());
+      DEBUG(spec.ts(), tp.ts(), " first one is volume estimate");
       L += tp * spec;
       break;
     }
@@ -308,10 +329,9 @@ spectrum PhotonIntegrator::Li(const ray &ra, const scene &s, RNG &rng,
       // diffuse, use a surface estimate
       spectrum spec = estimate_indirect(isect);
       // spectrum li = sample_light(isect, s, rng);
-      //  DEBUG(spec.ts(), li.ts(), " ", i, " ", isect.p.ts(), tp.ts());
+      //   DEBUG(spec.ts(), li.ts(), " ", i, " ", isect.p.ts(), tp.ts());
       L += tp * spec;
       // L += tp * li;
-      DEBUG("WTF ", L.ts());
       return L;
     }
 

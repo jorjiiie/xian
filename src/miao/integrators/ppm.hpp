@@ -7,7 +7,7 @@
 namespace miao {
 class PPMIntegrator : public PhotonIntegrator {
 public:
-  PPMIntegrator(camera *cam, int samples = 32, double r = 0.5, int np = 100000,
+  PPMIntegrator(camera *cam, int samples = 32, double r = 0.3, int np = 1000000,
                 double a_v = 0.4, double a_s = 0.4)
       : PhotonIntegrator(cam, samples, r, np), alpha_v(a_v), alpha_s(a_s) {}
   virtual void preprocess(const scene &s) override {

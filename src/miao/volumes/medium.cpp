@@ -21,6 +21,7 @@ spectrum homogeneous::sample(const ray &r, RNG &rng,
     mi.t = t;
     mi.ph = std::make_shared<isotropic>();
   } else {
+    // dont do anything??
   }
   spectrum tr = homogeneous::tr(r, std::min(t, D_INFINITY - 1), rng);
   spectrum pdf_component = media ? (st * tr) : tr;
