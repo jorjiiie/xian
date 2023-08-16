@@ -115,7 +115,6 @@ void PhotonIntegrator::preprocess(const scene &s) {
           if (interacted || true) {
             cell c = get_cell_v(mi.p);
             {
-              ++vol_photons;
               // this needs to account for the fraction that gets
               // boosted? sigma_s
               vmps[idx][c].push_back(Photon{mi.p, mi.wo, tp});
@@ -146,7 +145,6 @@ void PhotonIntegrator::preprocess(const scene &s) {
             cell c = get_cell_s(isect.p);
             {
               smps[idx][c].push_back(Photon{isect.p, isect.wo, tp});
-              ++s_photons;
               DEBUG("DEPOSITING A SURFACE PHOTON WITH TP", tp.ts(), " at cell ",
                     c.i, ' ', c.j, ' ', c.k, " with point ", isect.p.ts(),
                     r.o.ts(), r.d.ts(), mat);
@@ -159,8 +157,9 @@ void PhotonIntegrator::preprocess(const scene &s) {
           spectrum f =
               b->sample_f(wo, wi, isect.n, rng, pdf, BSDF_ALL, sampled);
 
-          if (isect.mi.transition())
-            r.m = isect.get_medium(wi);
+          // hack for now
+          // if (isect.mi.transition())
+          // r.m = isect.get_medium(wi);
 
           if (f.isBlack() || pdf == 0.0)
             break;
@@ -183,14 +182,18 @@ void PhotonIntegrator::preprocess(const scene &s) {
   for (int i = 0; i < num_shooters; i++)
     shoot();
 
+  int huh = 0;
   for (int i = 0; i < num_shooters; i++) {
     for (const auto &[cell, photons] : vmps[i]) {
+      huh += photons.size();
       vpm[cell].insert(vpm[cell].end(), photons.begin(), photons.end());
     }
     for (const auto &[cell, photons] : smps[i]) {
       spm[cell].insert(spm[cell].end(), photons.begin(), photons.end());
     }
   }
+
+  std::cerr << "huh photons bro " << huh << "\n";
 
   std::cerr << "DONE SHOOTING PHOTONS " << vol_photons << " " << s_photons
             << "\n";
@@ -277,8 +280,43 @@ PhotonIntegrator::estimate_indirect(const MediumInteraction &mi) const {
   return L * INV_PI / v_radius / v_radius / v_radius * 3 * 0.25 * inv_photons;
 }
 
+spectrum PhotonIntegrator::estimate_indirect_v(const ray &r,
+                                               const PhaseFunction &ph) const {
+  cell c = get_cell_v(r.o);
+  auto calc = [&](const vec3 &wi) { return ph.p(wi, r.d); };
+  spectrum L = estimate(c, vpm, calc, r.o, v_radius);
+
+  return L * INV_PI / v_radius / v_radius / v_radius * 3 * 0.25 * inv_photons;
+}
+
+spectrum PhotonIntegrator::estimate_beam(const ray &ra, double t,
+                                         const medium *med, spectrum &tp,
+                                         RNG &rng) const {
+  if (med == nullptr)
+    return spectrum{};
+  ray r = ra;
+  auto phase_func = med->get_ph();
+  if (t < default_dist) {
+    // uhh we just take the estimate here and just nothing else?
+    tp = med->tr(r, r.maxt, rng);
+    return estimate_indirect_v(r, *phase_func);
+  }
+  // recursively split this up.
+  // calculate this stuff
+  spectrum Li{};
+
+  t = min(t, max_dist);
+  for (double x = 0; x < t; x += default_dist) {
+    Li += estimate_indirect_v(r, *med->get_ph()) *
+          min(default_dist, t - default_dist) / med->sig_t(r.o);
+    tp *= (-med->sig_t(r.o) * default_dist).exp();
+    r.o = r.o + r.d * default_dist;
+  }
+  return Li;
+}
+
 spectrum PhotonIntegrator::Li(const ray &ra, const scene &s, RNG &rng,
-                              int depth) const {
+                              int) const {
   // get the lighting - also calculates direct lighting
   ray r = ra;
   spectrum tp{1.0};
@@ -293,24 +331,15 @@ spectrum PhotonIntegrator::Li(const ray &ra, const scene &s, RNG &rng,
 
     const medium *med = r.m;
     r.maxt = isect.t;
-    MediumInteraction mi;
-    if (med != nullptr) {
-      tp *= med->sample(r, rng, mi);
-    } else {
-      if (!y)
-        break;
-    }
 
-    if (mi.ph != nullptr) {
-      // L += tp * sample_light(mi, s, rng);
-      // this needs to compute the beam transmittance
-      spectrum spec = estimate_indirect(mi);
-      DEBUG(spec.ts(), tp.ts(), " first one is volume estimate");
-      L += tp * spec;
-      break;
-    }
-    // this we wanna interact with the surface instead!
+    spectrum tp_m{1.0};
+    spectrum Li_medium = estimate_beam(r, r.maxt, med, tp_m, rng);
+    L += tp * Li_medium;
+    tp *= tp_m;
+    if (!y)
+      return L;
 
+    // continue the light
     auto mat = isect.pr->get_material();
     if (mat == nullptr) {
       i--;
@@ -340,8 +369,10 @@ spectrum PhotonIntegrator::Li(const ray &ra, const scene &s, RNG &rng,
     double pdf;
     bxdf_t sampled = BSDF_NONE;
     spectrum f = BSDF->sample_f(wo, wi, isect.n, rng, pdf, BSDF_ALL, sampled);
-    if (isect.mi.transition())
-      r.m = isect.get_medium(wi);
+
+    // hack for now
+    // if (isect.mi.transition())
+    // r.m = isect.get_medium(wi);
 
     if (f.isBlack() || pdf == 0.0)
       break;

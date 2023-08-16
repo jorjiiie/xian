@@ -159,11 +159,8 @@ spectrum specular::sample_f(const vec3 &wo, vec3 &wi, const vec3 &n, RNG &rng,
                             double &pdf) const {
   DEBUG(wo.ts());
   double F = BXDF::FrDielectric(-vec3::dot(wo, n), etaA, etaB); // flipped LOL
-  // DEBUG("FUCK ", F);
-  auto z = rng.rfloat();
   if (rng.rfloat() < F) {
 
-    // DEBUG("reflect ");
     vec3 norm = n;
     if (vec3::dot(wo, n) > 0)
       norm = -n;
@@ -171,17 +168,13 @@ spectrum specular::sample_f(const vec3 &wo, vec3 &wi, const vec3 &n, RNG &rng,
     pdf = F;
     return r / std::abs(vec3::dot(wi, n)) * F;
   }
-  // else
   bool entering = vec3::dot(wo, n) < 0;
   double etaI = entering ? etaA : etaB;
   double etaT = entering ? etaB : etaA;
-  // DEBUG("ENTERING IS ", wo.ts(), " NORM IS ", n.ts());
   vec3 norm = entering ? -n : n;
-  // DEBUG("WHAT ", entering, " ", norm.ts());
   if (!BXDF::refract(wo, norm, etaI / etaT, wi))
     return spectrum{};
 
-  // DEBUG("WHAAT");
   pdf = 1 - F;
   return t * pdf / std::abs(vec3::dot(wi, n)) * (etaT * etaT / etaI / etaI);
 }

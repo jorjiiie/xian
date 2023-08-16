@@ -16,22 +16,39 @@ class SurfaceInteraction;
 class MediumInteraction;
 class bsdf;
 class discrete_1d;
-
+class PhaseFunction;
 // a photon mapping integrator in volumetric spaces
 class PhotonIntegrator : public SampleIntegrator {
 public:
   static constexpr int m_depth = 15;
-  PhotonIntegrator(camera *cam, int samples = 32, double r = .5,
-                   int np = 100000)
-      : SampleIntegrator(cam, samples), v_radius(r), s_radius(r),
-        num_photons(np), inv_photons(1.0 / np) {}
+  static constexpr double default_dist =
+      0.3; // this should be larger than the radius!
+  static constexpr int max_beam_steps =
+      5; // 2^max_beam_steps is the actual amount
+  static constexpr double big_delta = 0.3;
+  static constexpr double max_dist = default_dist * 100;
+  PhotonIntegrator(camera *cam, int samples = 32, double r = .05,
+                   int np = 300000)
+      : SampleIntegrator(cam, samples), num_photons(np), inv_photons(1.0 / np),
+        v_radius(r), s_radius(r) {}
   virtual void preprocess(const scene &s) override;
   virtual spectrum estimate_indirect(const SurfaceInteraction &) const;
   virtual spectrum estimate_indirect(const MediumInteraction &) const;
+  virtual spectrum estimate_indirect_v(const ray &,
+                                       const PhaseFunction &) const;
+  // calculates incoming beam light (returned), and then returns the overall
+  // transmittance for the beam in the spectrum passed in
+  // used for calculating volumetric photon estimates.
+  // (uses a biased estimate)
+  // for a homogenous medium?
+  virtual spectrum estimate_beam(const ray &, double, const medium *,
+                                 spectrum &, RNG &) const;
   virtual spectrum Li(const ray &r, const scene &s, RNG &rng,
                       int depth = 0) const override;
 
 protected:
+  spectrum estimate_steps(const ray &, double, const medium *, spectrum &,
+                          RNG &, spectrum &, int depth = 0) const;
   int num_photons;
   double inv_photons;
   double v_radius, s_radius;

@@ -66,13 +66,9 @@ void SampleIntegrator::render(const scene &s) {
 
           spectrum li = Li(r, s, rng, 10);
           L += li;
-          DEBUG("LI IS ", li.ts());
         }
-        // do something with L (add to film or sumthin)
 
-        DEBUG("Overall is ", L.ts());
         cam->f.add_sample(i, j, L, samples);
-        // f->add(L) or something
       }
     }
   };
@@ -95,7 +91,7 @@ void SampleIntegrator::render(const scene &s) {
 }
 
 spectrum PathIntegrator::Li(const ray &ra, const scene &s, RNG &rng,
-                            int depth) const {
+                            int) const {
   spectrum L{};
   spectrum throughput{1.0};
   bool lastSpecular = false;
@@ -113,8 +109,6 @@ spectrum PathIntegrator::Li(const ray &ra, const scene &s, RNG &rng,
       if (alight) {
         L += throughput * alight->Le(r);
         DEBUG(throughput.ts());
-        // if (onoff)
-        // DEBUG("hit light after! THIS IS A L(DS)*SDE PATH", throughput.ts());
       }
     }
     if (i != 0) {
@@ -150,9 +144,6 @@ spectrum PathIntegrator::Li(const ray &ra, const scene &s, RNG &rng,
     }
   }
 
-  /* if (L.magnitude() > 5) { */
-  /*   std::cerr << "bright asf" << L.ts() << "\n"; */
-  /* } */
   return L;
 }
 } // namespace miao

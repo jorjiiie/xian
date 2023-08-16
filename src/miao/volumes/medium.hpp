@@ -6,7 +6,10 @@
 #include "miao/core/rng.hpp"
 #include "miao/core/spectrum.hpp"
 
+#include "miao/volumes/base.hpp"
+
 #include <cmath>
+#include <memory>
 
 namespace miao {
 
@@ -19,6 +22,10 @@ public:
   // gives next point where we should do something? - max length IS stored in r
   virtual spectrum sample(const ray &r, RNG &rng,
                           MediumInteraction &mi) const = 0;
+  virtual std::unique_ptr<PhaseFunction> get_ph() const = 0;
+  virtual spectrum sig_s(const vec3 &) const = 0;
+  virtual spectrum sig_a(const vec3 &) const = 0;
+  virtual spectrum sig_t(const vec3 &) const = 0;
 };
 
 class homogeneous : public medium {
@@ -32,6 +39,12 @@ public:
   virtual spectrum sample(const ray &r, RNG &rng,
                           MediumInteraction &mi) const override;
 
+  virtual std::unique_ptr<PhaseFunction> get_ph() const override {
+    return std::make_unique<isotropic>();
+  }
+  virtual spectrum sig_s(const vec3 &) const override { return ss; }
+  virtual spectrum sig_a(const vec3 &) const override { return sa; }
+  virtual spectrum sig_t(const vec3 &) const override { return st; }
   // private:
   //  absorb, scatter, both
   const spectrum sa, ss, st;

@@ -25,10 +25,10 @@ public:
 class ProjectionCamera : public camera {
 public:
   ProjectionCamera(const Transformation &ctw, film &f, double t0, double t1,
-                   double apeture, double focd, double screenX, double screenY)
+                   double apeture, double focd, double, double)
       : camera(ctw, f, t0, t1), apeture(apeture), focd(focd) {}
 
-private:
+  // private:
   double apeture, focd;
 };
 
@@ -39,7 +39,7 @@ public:
              double foc, double ap, double fov)
 
       : camera(Transformation::scale(1, 1, 1), f, 0.0, 0.0), pos(pos), up(up),
-        at(at), foc(foc), ap(ap), width(f.get_width()), height(f.get_height()) {
+        at(at), width(f.get_width()), height(f.get_height()), foc(foc), ap(ap) {
 
     d = (at - pos).unit();
 

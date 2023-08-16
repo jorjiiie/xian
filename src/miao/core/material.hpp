@@ -154,7 +154,7 @@ class specular : public bxdf {
 public:
   specular(const spectrum &R, const spectrum &T, double etaA_, double etaB_)
       : bxdf(bxdf_t(BSDF_REFLECTION | BSDF_TRANSMISSION | BSDF_SPECULAR)), r(R),
-        t(T), fr(etaA_, etaB_), etaA(etaA_), etaB(etaB_) {}
+        t(T), etaA(etaA_), etaB(etaB_), fr(etaA_, etaB_) {}
   virtual spectrum f(const vec3 &, const vec3 &, const vec3 &) const override {
     return spectrum{};
   }
@@ -240,7 +240,7 @@ private:
 class glass : public material {
 public:
   glass(const spectrum &s_, double etaA_, double etaB_)
-      : etaA(etaA_), etaB(etaB_), s(s_) {}
+      : s(s_), etaA(etaA_), etaB(etaB_) {}
   virtual std::shared_ptr<bsdf>
   get_scatter(const SurfaceInteraction &s) const override;
 

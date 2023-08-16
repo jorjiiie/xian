@@ -19,9 +19,9 @@ class PhaseFunction;
 
 struct interaction {
   interaction() : t(0) {}
-  interaction(const point3 &p, const vec3 &n, const vec3 &wo, double t,
-              const MediumInterface m)
-      : p(p), n(n), wo(wo), t(t), mi(m) {}
+  interaction(const point3 &p_, const vec3 &n_, const vec3 &wo_, double t_,
+              const MediumInterface m_)
+      : p(p_), wo(wo_), n(n_), t(t_), mi(m_) {}
   bool isSurfaceInteraction() const { return n != vec3{}; }
   bool isMediumInteraction() const { return !isSurfaceInteraction(); }
 
@@ -39,8 +39,8 @@ struct interaction {
     vec3 d = p2 - p1;
     return ray{p1, d, 0, 1 - EPS, t};
   }
-  const medium *get_medium(const vec3 &wo) const {
-    if (vec3::dot(wo, n) > 0) {
+  const medium *get_medium(const vec3 &wo_) const {
+    if (vec3::dot(wo_, n) > 0) {
       // outside
       return mi.out;
     }
@@ -57,10 +57,10 @@ struct interaction {
 // about antialiasing - everything will get blurred anyways
 struct SurfaceInteraction : public interaction {
   SurfaceInteraction() {}
-  SurfaceInteraction(const point3 &p, const vec3 &n, const vec3 &wo, double t,
-                     const MediumInterface m, const vec3 &sn_, double u_,
-                     double v_)
-      : interaction(p, n, wo, t, m), sn(sn_), u(u_), v(v_) {}
+  SurfaceInteraction(const point3 &p_, const vec3 &n_, const vec3 &wo_,
+                     double t_, const MediumInterface m_, const vec3 &sn_,
+                     double u_, double v_)
+      : interaction(p_, n_, wo_, t_, m_), sn(sn_), u(u_), v(v_) {}
   bsdf *get_bsdf(const ray &r);
   vec3 sn;
   double u, v;

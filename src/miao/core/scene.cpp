@@ -86,7 +86,7 @@ spectrum visibility::tr(const scene &s, RNG &rng) const {
 }
 
 // adapted from volppm
-bool scene::load_from_obj(const std::string &path) {
+bool scene::load_from_obj(const std::string &path, const Transformation &t) {
   tinyobj::ObjReaderConfig reader_config;
   reader_config.mtl_search_path = "./models/";
   reader_config.triangulate = true;
@@ -157,12 +157,10 @@ bool scene::load_from_obj(const std::string &path) {
       break;
     }
   }
-  std::cerr << "what is going on  " << materials.size() << " " << mats.size()
-            << " mat size\n";
 
   for (size_t i = 0; i < shapes.size(); i++) {
     size_t offset = 0;
-    std::cerr << "uwu\n";
+    std::cerr << "name: " << shapes[i].name << "\n";
     for (size_t f = 0; f < shapes[i].mesh.num_face_vertices.size(); f++) {
       const size_t fv =
           static_cast<size_t>(shapes[i].mesh.num_face_vertices[f]);
@@ -182,12 +180,10 @@ bool scene::load_from_obj(const std::string &path) {
     }
   }
 
-  triangles = std::make_unique<TriangleMesh>(
-      &Transformation::identity, &Transformation::identity, vertices, normals,
-      texcoords, indices);
-  const TriangleMesh &mesh = *triangles;
+  triangles.push_back(std::make_unique<TriangleMesh>(&t, &t, vertices, normals,
+                                                     texcoords, indices));
+  const TriangleMesh &mesh = *triangles.back();
 
-  std::vector<std::shared_ptr<primitive>> prims;
   std::cerr << vertices.size() << " " << normals.size() << " "
             << texcoords.size() << " " << indices.size() << "\n";
 
@@ -195,7 +191,8 @@ bool scene::load_from_obj(const std::string &path) {
   for (auto &x : mesh.tris) {
     std::shared_ptr<material> _mat;
     if (material_index[i] == -1) {
-      _mat = std::make_shared<lambert>(spectrum{0.9, 0.3, 0.4});
+      _mat = std::make_shared<lambert>(
+          spectrum{0.9, 0.3, 0.4}); // terrible default lol
     } else {
       _mat = materials[material_index[i]];
     }
@@ -204,28 +201,11 @@ bool scene::load_from_obj(const std::string &path) {
         std::make_shared<GeoPrimitive>(x, _mat, nullptr, MediumInterface{}));
   }
 
-  // spectrum li{20 / 10, 10 / 10, 6 / 10};
-  spectrum li{2.5, 2.5, 2.5};
-
-  // Medium med{spectrum{}}
-  vec3 dD{0, 2, 0};
-  Transformation tt = Transformation::translate(dD);
-  Transformation invtt = Transformation::translate(-dD);
-  std::shared_ptr<shape> lc =
-      std::make_shared<sphere>(&tt, &invtt, false, .1, -2, 2, 0, 0, 0);
-
-  std::shared_ptr<AreaLight> alight = std::make_shared<AreaLight>(li, lc);
-
-  prims.push_back(std::make_shared<GeoPrimitive>(
-      lc, std::make_shared<lambert>(spectrum{1.0}), alight));
-  lights.push_back(alight);
-  /* prims.push_back(std::make_shared<GeoPrimitive>( */
-  /*     std::make_shared<sphere>(&Transformation::identity, */
-  /*                              &Transformation::identity, false, 15, 0, 0, 0,
-   * 0, */
-  /*                              0), */
-  /*     std::make_shared<lambert>(spectrum{0.5, 0.5, 0.5}), nullptr)); */
   std::cerr << "loaded " << prims.size() << " primitives!" << std::endl;
+  agg = std::make_shared<bvh>(prims);
+  return true;
+}
+bool scene::build() {
   agg = std::make_shared<bvh>(prims);
   return true;
 }

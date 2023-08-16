@@ -41,7 +41,7 @@ const material *aggregate::get_material() const {
 
 BBox dumb_aggregate::worldbound() const { return wb; }
 std::optional<SurfaceInteraction> dumb_aggregate::intersect(const ray &r,
-                                                            double &t) const {
+                                                            double &) const {
   std::optional<SurfaceInteraction> ret = {};
   double tt = 69123;
   for (const auto &x : p) {

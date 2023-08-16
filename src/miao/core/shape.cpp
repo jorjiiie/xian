@@ -27,7 +27,7 @@ BBox sphere::getBBox() const {
 // t is outgoing time
 bool sphere::intersect(const ray &r, double &t,
                        SurfaceInteraction &isect) const {
-  double phi, theta;
+  // double phi, theta;
   point3 hit;
   vec3 oc = r.o - origin;
 
@@ -131,7 +131,7 @@ TriangleMesh TriangleMesh::read_obj(std::istream &str,
   return TriangleMesh(otw, wto, vertices, normals, textures, faces);
 }
 
-TriangleMesh::TriangleMesh(const Transformation *otw, const Transformation *wto,
+TriangleMesh::TriangleMesh(const Transformation *otw, const Transformation *,
                            std::vector<vec3> vertices_,
                            std::vector<vec3> normals_,
                            std::vector<vec3> textures_,
@@ -181,8 +181,7 @@ bool triangle::intersect(const ray &r, double &t,
   const vec3 &v1 = mesh->v[vertices[0]];
   const vec3 &v2 = mesh->v[vertices[1]];
   const vec3 &v3 = mesh->v[vertices[2]];
-  const std::vector<vec3> &j = mesh->v;
-  DEBUG("HERE BRUH\n");
+
   e1 = v2 - v1;
   e2 = v3 - v1;
   h = vec3::cross(r.d, e2);
@@ -225,8 +224,10 @@ double triangle::area() const {
   return 0.5 * std::abs(vec3::cross(v2 - v1, v3 - v1).magnitude());
 }
 
-interaction triangle::sample(RNG &r) const {}
-interaction triangle::sample(const interaction &i, RNG &r) const {}
-double triangle::pdf(const interaction &r, const vec3 &wi) const {}
+interaction triangle::sample(RNG &) const { return interaction{}; }
+interaction triangle::sample(const interaction &, RNG &) const {
+  return interaction{};
+}
+double triangle::pdf(const interaction &, const vec3 &) const { return 0; }
 
 } // namespace miao

@@ -23,8 +23,8 @@ double uniform_sphere_pdf();
 
 class shape {
 public:
-  shape(const Transformation *otw, const Transformation *wto, bool reverse)
-      : otw(otw), wto(wto), r(reverse) {}
+  shape(const Transformation *otw_, const Transformation *wto_, bool reverse)
+      : otw(otw_), wto(wto_), r(reverse) {}
 
   virtual BBox getBBox() const = 0;
 
@@ -57,11 +57,10 @@ public:
 class sphere : public shape {
 public:
   sphere(const Transformation *otw, const Transformation *wto, bool rev,
-         double r, double zmin, double zmax, double tmin, double tmax,
-         double pmax)
-      : shape(otw, wto, rev), radius(r), zmin(clamp(zmin, -r, r)),
-        zmax(clamp(zmax, -r, r)), tmin(std::acos(clamp(zmin / r, -1.0, 1.0))),
-        tmax(clamp(zmax / r, -1.0, 1.0)), pmax(clamp(pmax, 0.0, 360.0)),
+         double r, double zmin_, double zmax_, double, double, double pmax_)
+      : shape(otw, wto, rev), radius(r), zmin(clamp(zmin_, -r, r)),
+        zmax(clamp(zmax_, -r, r)), tmin(std::acos(clamp(zmin_ / r, -1.0, 1.0))),
+        tmax(clamp(zmax_ / r, -1.0, 1.0)), pmax(clamp(pmax_, 0.0, 360.0)),
         origin((*otw)(point3{}, true)) {}
   virtual BBox getBBox() const override;
   virtual bool intersect(const ray &r, double &t,

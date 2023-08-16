@@ -86,7 +86,7 @@ public:
   }
 
   // bool for throwaway LMAO
-  point3 operator()(const point3 &p, bool f) const {
+  point3 operator()(const point3 &p, bool) const {
     double x = p.x, y = p.y, z = p.z;
     // unroll the multiplication
     double xp = m.m[0][0] * x + m.m[0][1] * y + m.m[0][2] * z + m.m[0][3];
@@ -109,7 +109,7 @@ public:
   }
 
   // int for normals xd
-  vec3 operator()(const vec3 &n, int N) const {
+  vec3 operator()(const vec3 &n, int) const {
     // apply to normal
     double x = n.x, y = n.y, z = n.z;
     return vec3{m_inv.m[0][0] * x + m_inv.m[1][0] * y + m_inv.m[2][0] * z,

@@ -105,10 +105,10 @@ int main() {
   Transformation up2 = Transformation::translate({0, 2, 0});
   TriangleMesh mesh = TriangleMesh::read_obj(str, &down2, &up2);
   Transformation id{};
-  spectrum li{20.4, 11.4, 6.0}; // ????
+  spectrum li{10, 10, 10}; // ????
 
   vec3 dD{1, 1, 0};
-  homogeneous med{spectrum{0.5, 0.055, 0.015}, spectrum{0.06, 0.10, 0.25}, 0};
+  homogeneous med{spectrum{0.3, 0.3, 0.3}, spectrum{0.05, 0.05, 0.05}, 0};
   medium *MEDIUM = &med;
   // MEDIUM = nullptr;
   MediumInterface emptyin{nullptr, MEDIUM};
@@ -210,7 +210,7 @@ int main() {
 
   TempCamera cam{f, {0, 0, -8}, {0, 1, 0}, {0, 0, 1}, 1, 0, 90};
   cam.med = MEDIUM;
-  ProgressiveRenderer<VolumeIntegrator> renderer(s, cam, 1, 500);
+  ProgressiveRenderer<PhotonIntegrator> renderer(s, cam, 1, 1);
 
   auto callback = [&](int x) {
     freopen(("aa" + to_string(x) + ".ppm").c_str(), "w", stdout);

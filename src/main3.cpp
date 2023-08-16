@@ -39,18 +39,58 @@ void tmp(film::pix &p, int s) {
 }
 
 int main() {
-  scene s{"models/box.obj"};
+  scene s;
+  s.load_from_obj("models/box.obj");
+
+  Transformation z = Transformation::translate(vec3{0.4, .855, 0.2}) *
+                     Transformation::scale(0.2, 0.2, 0.2) *
+                     Transformation::rotateY(180);
+  s.load_from_obj("models/tyra.obj", z);
+
+  Transformation szz = Transformation::translate(vec3{-0.5, 0.35, 0.25}) *
+                       Transformation::scale(0.3, 0.3, 0.3) *
+                       Transformation::rotateY(20) *
+                       Transformation::rotateX(-30);
+  s.load_from_obj("models/suzanne.obj", szz);
+
+  Transformation fish = Transformation::translate(vec3{-.3, 1.3, -0.2}) *
+                        Transformation::scale(0.1, 0.1, 0.1) *
+                        Transformation::rotateY(30);
+  s.load_from_obj("models/fish.obj", fish);
+
+  s.build();
+
+  // spectrum li{20 / 10, 10 / 10, 6 / 10};
+  spectrum li{2.5, 2.5, 2.5};
+
+  // Medium med{spectrum{}}
+  homogeneous x{spectrum{0.1, 0.05, 0.005}, spectrum{0.05, 0.08, 0.15}, 0};
+  // const medium *medptr = nullptr;
+  const medium *medptr = &x;
+  vec3 dD{0, 2, .1};
+  Transformation tt = Transformation::translate(dD);
+  Transformation invtt = Transformation::translate(-dD);
+  std::shared_ptr<shape> lc =
+      std::make_shared<sphere>(&tt, &invtt, false, .02, -2, 2, 0, 0, 0);
+
+  std::shared_ptr<AreaLight> alight =
+      std::make_shared<AreaLight>(li * 1.5 * 3, lc);
+  alight->m = medptr;
+
+  s.add_prim(std::make_shared<GeoPrimitive>(
+      lc, std::make_shared<lambert>(spectrum{1.0}), alight));
+  s.lights.push_back(alight);
 
   int width = 1000;
   int height = 1000;
   film f{width, height};
 
   TempCamera cam{f, {0, 1, 2}, {0, 1, 0}, {0, 1, 0}, 1, 0, 90};
-  cam.med = nullptr;
-  ProgressiveRenderer<PPMIntegrator> renderer(s, cam, 15, 15);
+  cam.med = medptr;
+  ProgressiveRenderer<PPMIntegrator> renderer(s, cam, 1500, 2);
 
   auto callback = [&](int x) {
-    freopen(("aa" + to_string(x) + ".ppm").c_str(), "w", stdout);
+    freopen(("ppm/tyra" + to_string(x) + ".ppm").c_str(), "w", stdout);
 
     std::cerr << "bbox tests: " << cnter_::bbox_tests << "\n"
               << " primitive tests: " << cnter_::prim_tests

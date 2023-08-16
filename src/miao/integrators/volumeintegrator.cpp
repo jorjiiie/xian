@@ -18,12 +18,11 @@
 
 namespace miao {
 spectrum VolumeIntegrator::Li(const ray &rx, const scene &s, RNG &rng,
-                              int depth) const {
+                              int) const {
   spectrum L{};
   spectrum tp{1.0};
   bool lastSpecular = false;
 
-  bool none = false;
   ray r = rx;
   int i;
   for (i = 0; i < m_depth; i++) {
@@ -33,20 +32,13 @@ spectrum VolumeIntegrator::Li(const ray &rx, const scene &s, RNG &rng,
     if (!y)
       isect.t = D_INFINITY;
     MediumInteraction mi;
-    // const medium *med = isect.get_medium(r.d);
     const medium *med = r.m;
     r.maxt = isect.t;
     if (med != nullptr) {
       tp *= med->sample(r, rng, mi); // it goes that far anyways?
-      DEBUG("YES MEDIA!");
     } else {
-      DEBUG("NO MEDIA!");
-      none = true;
       if (!y)
         break;
-    }
-    if (none) {
-      DEBUG("FUCK ", r.o.ts(), r.d.ts());
     }
 
     if (mi.ph != nullptr) { // if medium interaction
@@ -57,7 +49,6 @@ spectrum VolumeIntegrator::Li(const ray &rx, const scene &s, RNG &rng,
       // functions LOL)
       mi.ph->sample_p(r.d, r.d, rng);
 
-      DEBUG("what is going on");
       r.o = mi.p;
       r.d = r.d;
     } else {
@@ -86,9 +77,6 @@ spectrum VolumeIntegrator::Li(const ray &rx, const scene &s, RNG &rng,
       spectrum f = b->sample_f(wo, wi, isect.n, rng, pdf, BSDF_ALL, sampled);
 
       lastSpecular = (sampled & BSDF_SPECULAR) != 0;
-      if (lastSpecular) {
-        DEBUG("SURFACE HIT ON GLASS", isect.mi.transition());
-      }
 
       if (isect.mi.transition())
         r.m = isect.get_medium(wi);
