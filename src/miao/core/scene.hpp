@@ -19,9 +19,9 @@ class aggregate;
 class light;
 class scene {
 public:
-  scene(const std::vector<std::shared_ptr<light>> &lights,
-        std::shared_ptr<aggregate> agg)
-      : lights(lights), agg(agg) {}
+  scene(const std::vector<std::shared_ptr<light>> &lights_,
+        std::shared_ptr<aggregate> agg_)
+      : lights(lights_), agg(agg_) {}
   scene(const std::string &s) { load_from_obj(s); }
   scene() {}
   std::optional<SurfaceInteraction> intersect(const ray &r, double t) const {

@@ -117,7 +117,8 @@ void PhotonIntegrator::preprocess(const scene &s) {
             {
               // this needs to account for the fraction that gets
               // boosted? sigma_s
-              vmps[idx][c].push_back(Photon{mi.p, mi.wo, tp});
+              vmps[idx][c].push_back(
+                  Photon{mi.p, mi.wo, tp * med->sig_s(mi.p)});
               // vpm[c].push_back(Photon{
               // mi.p, mi.wo, tp /* * static_cast<const homogeneous *>(med)->ss
               // */});

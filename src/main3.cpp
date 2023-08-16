@@ -61,12 +61,12 @@ int main() {
   s.build();
 
   // spectrum li{20 / 10, 10 / 10, 6 / 10};
-  spectrum li{2.5, 2.5, 2.5};
+  spectrum li{5, 2.5, 2};
 
   // Medium med{spectrum{}}
-  homogeneous x{spectrum{0.1, 0.05, 0.005}, spectrum{0.05, 0.08, 0.15}, 0};
+  homogeneous MEDIUM{spectrum{0.1, 0.05, 0.005}, spectrum{0.05, 0.08, 0.15}, 0};
   // const medium *medptr = nullptr;
-  const medium *medptr = &x;
+  const medium *medptr = &MEDIUM;
   vec3 dD{0, 2, .1};
   Transformation tt = Transformation::translate(dD);
   Transformation invtt = Transformation::translate(-dD);

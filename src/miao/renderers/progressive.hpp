@@ -15,9 +15,9 @@ class camera;
 template <typename Integrator> class ProgressiveRenderer {
 
 public:
-  ProgressiveRenderer(scene &s, camera &cam, int epochs, int spe = 16)
-      : s(s), cam(cam), leunuchs(std::make_shared<Integrator>(&cam, spe)),
-        epochs(epochs), spe(spe) {}
+  ProgressiveRenderer(scene &s_, camera &cam_, int epochs_, int spe_ = 16)
+      : s(s_), cam(cam_), leunuchs(std::make_shared<Integrator>(&cam_, spe_)),
+        epochs(epochs_), spe(spe_) {}
   void render(const std::function<void(int)> &callback) {
 
     for (int i = 0; i < epochs; i++) {

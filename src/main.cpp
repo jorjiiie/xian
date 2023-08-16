@@ -212,8 +212,8 @@ int main() {
   cam.med = MEDIUM;
   ProgressiveRenderer<PhotonIntegrator> renderer(s, cam, 1, 1);
 
-  auto callback = [&](int x) {
-    freopen(("aa" + to_string(x) + ".ppm").c_str(), "w", stdout);
+  auto callback = [&f, width, height](int ix) {
+    freopen(("aa" + to_string(ix) + ".ppm").c_str(), "w", stdout);
 
     std::cerr << "bbox tests: " << cnter_::bbox_tests << "\n"
               << " primitive tests: " << cnter_::prim_tests

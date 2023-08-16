@@ -8,8 +8,8 @@
 namespace miao {
 class VolumeIntegrator : public SampleIntegrator {
 public:
-  VolumeIntegrator(camera *cam, int samples = 32, int depth = 30)
-      : SampleIntegrator(cam, samples), m_depth(depth) {}
+  VolumeIntegrator(camera *cam_, int samples_ = 32, int depth = 30)
+      : SampleIntegrator(cam_, samples_), m_depth(depth) {}
   virtual spectrum Li(const ray &r, const scene &s, RNG &rng,
                       int depth = 0) const override;
   const int m_depth;

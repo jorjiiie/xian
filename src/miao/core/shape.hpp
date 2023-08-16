@@ -56,9 +56,9 @@ public:
 
 class sphere : public shape {
 public:
-  sphere(const Transformation *otw, const Transformation *wto, bool rev,
+  sphere(const Transformation *otw_, const Transformation *wto_, bool rev,
          double r, double zmin_, double zmax_, double, double, double pmax_)
-      : shape(otw, wto, rev), radius(r), zmin(clamp(zmin_, -r, r)),
+      : shape(otw_, wto_, rev), radius(r), zmin(clamp(zmin_, -r, r)),
         zmax(clamp(zmax_, -r, r)), tmin(std::acos(clamp(zmin_ / r, -1.0, 1.0))),
         tmax(clamp(zmax_ / r, -1.0, 1.0)), pmax(clamp(pmax_, 0.0, 360.0)),
         origin((*otw)(point3{}, true)) {}

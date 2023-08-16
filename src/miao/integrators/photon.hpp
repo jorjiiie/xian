@@ -23,14 +23,13 @@ public:
   static constexpr int m_depth = 15;
   static constexpr double default_dist =
       0.3; // this should be larger than the radius!
-  static constexpr int max_beam_steps =
-      5; // 2^max_beam_steps is the actual amount
+  static constexpr int max_beam_steps = 15;
   static constexpr double big_delta = 0.3;
-  static constexpr double max_dist = default_dist * 100;
-  PhotonIntegrator(camera *cam, int samples = 32, double r = .05,
+  static constexpr double max_dist = max_beam_steps * default_dist;
+  PhotonIntegrator(camera *cam_, int samples_ = 32, double r = .05,
                    int np = 300000)
-      : SampleIntegrator(cam, samples), num_photons(np), inv_photons(1.0 / np),
-        v_radius(r), s_radius(r) {}
+      : SampleIntegrator(cam_, samples_), num_photons(np),
+        inv_photons(1.0 / np), v_radius(r * 3), s_radius(r) {}
   virtual void preprocess(const scene &s) override;
   virtual spectrum estimate_indirect(const SurfaceInteraction &) const;
   virtual spectrum estimate_indirect(const MediumInteraction &) const;
