@@ -81,8 +81,8 @@ int main() {
       lc, std::make_shared<lambert>(spectrum{1.0}), alight));
   s.lights.push_back(alight);
 
-  int width = 100;
-  int height = 100;
+  int width = 1000;
+  int height = 1000;
   film f{width, height};
 
   TempCamera cam{f, {0, 1, 2}, {0, 1, 0}, {0, 1, 0}, 1, 0, 90};

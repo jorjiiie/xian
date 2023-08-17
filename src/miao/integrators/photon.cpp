@@ -18,7 +18,6 @@
 #include "miao/volumes/base.hpp"
 #include "miao/volumes/medium.hpp"
 
-#include <functional>
 #include <omp.h>
 #include <unordered_map>
 
