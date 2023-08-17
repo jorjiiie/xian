@@ -61,7 +61,7 @@ int main() {
   s.build();
 
   // spectrum li{20 / 10, 10 / 10, 6 / 10};
-  spectrum li{5, 2.5, 2};
+  spectrum li{4, 3, 3};
 
   // Medium med{spectrum{}}
   homogeneous MEDIUM{spectrum{0.1, 0.05, 0.005}, spectrum{0.05, 0.08, 0.15}, 0};
@@ -81,8 +81,8 @@ int main() {
       lc, std::make_shared<lambert>(spectrum{1.0}), alight));
   s.lights.push_back(alight);
 
-  int width = 1000;
-  int height = 1000;
+  int width = 100;
+  int height = 100;
   film f{width, height};
 
   TempCamera cam{f, {0, 1, 2}, {0, 1, 0}, {0, 1, 0}, 1, 0, 90};
@@ -105,6 +105,17 @@ int main() {
         int g = to_8bit(y.first.g);
         int b = to_8bit(y.first.b);
         cout << r << " " << g << " " << b << "\n";
+      }
+    }
+
+    freopen("RENDER_STATE.txt", "w", stdout);
+    // for raw data and combining them!
+
+    for (int i = height - 1; i >= 0; --i) {
+      for (int j = 0; j < width; j++) {
+        auto y = f.pixel(j, i);
+        std::cout << y.first.r << " " << y.first.g << " " << y.first.b << " "
+                  << y.second << "\n";
       }
     }
   };

@@ -6,7 +6,6 @@
 #include "miao/integrators/integrator.hpp"
 
 #include <functional>
-#include <mutex>
 #include <unordered_map>
 #include <vector>
 

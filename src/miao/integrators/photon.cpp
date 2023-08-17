@@ -18,6 +18,7 @@
 #include "miao/volumes/base.hpp"
 #include "miao/volumes/medium.hpp"
 
+#include <functional>
 #include <omp.h>
 #include <unordered_map>
 
@@ -88,8 +89,7 @@ void PhotonIntegrator::preprocess(const scene &s) {
       ray r;
 
       spectrum tp = sample_lights(s, r, li_distr, rng, total_power);
-      DEBUG(tp.ts(), " sick tp bro");
-      // we only sample indirect illumination
+      // we only sample indirect illumination (includes direct for now lol)
       bool interacted = true;
       for (int bounces = 0; bounces < m_depth; bounces++) {
         auto tmp = s.intersect(r, 0);
@@ -115,15 +115,18 @@ void PhotonIntegrator::preprocess(const scene &s) {
           if (interacted || true) {
             cell c = get_cell_v(mi.p);
             {
-              // this needs to account for the fraction that gets
-              // boosted? sigma_s
-              vmps[idx][c].push_back(
-                  Photon{mi.p, mi.wo, tp * med->sig_s(mi.p)});
-              // vpm[c].push_back(Photon{
-              // mi.p, mi.wo, tp /* * static_cast<const homogeneous *>(med)->ss
-              // */});
-              DEBUG("DEPOSITING A VOLUME PHOTON WITH TP", tp.ts(), " at cell",
-                    c.i, ' ', c.j, ' ', c.k, " with point ", mi.p.ts());
+              if (mi.p.msq() < 70) {
+                // this needs to account for the fraction that gets
+                // boosted? sigma_s
+                vmps[idx][c].push_back(
+                    Photon{mi.p, mi.wo, tp * med->sig_s(mi.p)});
+                // vpm[c].push_back(Photon{
+                // mi.p, mi.wo, tp /* * static_cast<const homogeneous
+                // *>(med)->ss
+                // */});
+                DEBUG("DEPOSITING A VOLUME PHOTON WITH TP", tp.ts(), " at cell",
+                      c.i, ' ', c.j, ' ', c.k, " with point ", mi.p.ts());
+              }
             }
           }
           // deposit something here btw
@@ -300,9 +303,8 @@ spectrum PhotonIntegrator::estimate_beam(const ray &ra, double t,
   if (t < default_dist) {
     // uhh we just take the estimate here and just nothing else?
     tp = med->tr(r, r.maxt, rng);
-    return estimate_indirect_v(r, *phase_func);
+    return estimate_indirect_v(r, *phase_func) * t;
   }
-  // recursively split this up.
   // calculate this stuff
   spectrum Li{};
 
