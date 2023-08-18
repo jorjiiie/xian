@@ -187,12 +187,12 @@ void PhotonIntegrator::preprocess(const scene &s) {
 
   int huh = 0;
   for (int i = 0; i < num_shooters; i++) {
-    for (const auto &[cell, photons] : vmps[i]) {
+    for (const auto &[c, photons] : vmps[i]) {
       huh += photons.size();
-      vpm[cell].insert(vpm[cell].end(), photons.begin(), photons.end());
+      vpm[c].insert(vpm[c].end(), photons.begin(), photons.end());
     }
-    for (const auto &[cell, photons] : smps[i]) {
-      spm[cell].insert(spm[cell].end(), photons.begin(), photons.end());
+    for (const auto &[c, photons] : smps[i]) {
+      spm[c].insert(spm[c].end(), photons.begin(), photons.end());
     }
   }
 

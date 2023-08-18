@@ -109,13 +109,14 @@ int main() {
     }
 
     freopen("RENDER_STATE.txt", "w", stdout);
+    ofstream output("RENDER_STATE.txt");
     // for raw data and combining them!
 
     for (int i = height - 1; i >= 0; --i) {
       for (int j = 0; j < width; j++) {
         auto y = f.pixel(j, i);
-        std::cout << y.first.r << " " << y.first.g << " " << y.first.b << " "
-                  << y.second << "\n";
+        output << y.first.r << " " << y.first.g << " " << y.first.b << " "
+               << y.second << "\n";
       }
     }
   };
